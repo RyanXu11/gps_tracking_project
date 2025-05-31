@@ -1,0 +1,38 @@
+# Web framework
+Flask==2.3.3
+Flask-CORS==4.0.0
+
+# Database
+psycopg2-binary==2.9.7
+SQLAlchemy==2.0.23 # ORM (optional, simplifies database operations)
+Flask-SQLAlchemy==3.1.1 # Flask integration
+
+# GPS/geographic data processing
+gpxpy==1.5.0
+geopy==2.4.0 # Geographic computing library
+
+# Data processing and analysis
+numpy==2.2.6
+pandas==2.2.3
+
+# Google APIs (if needed)
+googlemaps==4.10.0
+google-auth==2.23.4
+google-auth-oauthlib==1.1.0
+
+# Configuration management
+python-dotenv==1.0.0
+
+# Development tools
+pytest==7.4.3 # Test framework
+black==23.9.1 # Code formatting
+flake8==6.1.0 # Code checking
+
+# Plot or images
+plotly==6.1.1
+kaleido==0.2.1 # Used to export static images
+Pillow==11.2.1 # Image processing (if you need to process map images)
+
+# Other useful libraries
+requests==2.31.0 # HTTP requests
+python-dateutil==2.8.2 # Date and time processing
