@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - GPS Tracking{% endblock %}
+
+{% block content %}
+<h1>GPS Tracking Dashboard</h1>
+
+<div class="dashboard-actions">
+    <a href="/upload" class="btn">Upload New GPX File</a>
+</div>
+
+<div class="dashboard-stats">
+    <h2>Your Tracks</h2>
+    
+    {% if tracks %}
+        <div class="tracks-table">
+            <table>
+                <tr>
+                    <th>Track Name</th>
+                    <th>Distance (km)</th>
+                    <th>Duration</th>
+                    <th>Max Speed (km/h)</th>
+                    <th>Avg Speed (km/h)</th>
+                    <th>Sampling</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            {% for track in tracks %}
+                <tr>
+                    <td>{{ track.track_name }}</td>
+                    <td>{{ "%.2f"|format(track.total_distance or 0) }}</td>
+                    <td>{{ track.total_duration or 'N/A' }}</td>
+                    <td>{{ "%.1f"|format(track.max_speed or 0) }}</td>
+                    <td>{{ "%.1f"|format(track.avg_speed or 0) }}</td>
+                    <td>{{ track.skip_points + 1 }}s</td>
+                    <td>{{ track.created_at.strftime('%Y-%m-%d %H:%M') if track.created_at else 'N/A' }}</td>
+                    <td>
+                        <a href="/recalculate/{{ track.track_id }}" style="color: #007bff; text-decoration: none;">
+                            Recalculate
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </table>
+        </div>
+    {% else %}
+        <p class="no-data">No tracks uploaded yet. <a href="/upload">Upload your first GPX file</a>!</p>
+    {% endif %}
+</div>
+
+<div class="dashboard-info">
+    <h3>Quick Stats</h3>
+    <p><strong>Total Tracks:</strong> {{ tracks|length if tracks else 0 }}</p>
+    {% if tracks %}
+        <p><strong>Total Distance:</strong> {{ "%.2f"|format(tracks|sum(attribute='total_distance')|default(0)) }} km</p>
+    {% endif %}
+</div>
+{% endblock %}

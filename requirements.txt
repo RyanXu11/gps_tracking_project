@@ -3,13 +3,14 @@ Flask==2.3.3
 Flask-CORS==4.0.0
 
 # Database
-psycopg2-binary==2.9.7
+psycopg2==2.9.10
 SQLAlchemy==2.0.23 # ORM (optional, simplifies database operations)
 Flask-SQLAlchemy==3.1.1 # Flask integration
 
 # GPS/geographic data processing
 gpxpy==1.5.0
-geopy==2.4.0 # Geographic computing library
+geopy==2.4.0    # Geographic computing library
+pytz==2025.2    #timezone
 
 # Data processing and analysis
 numpy==2.2.6

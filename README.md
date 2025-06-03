@@ -19,36 +19,44 @@ A web-based GPS track upload, storage, and visualization analysis system. Users 
 
 ```
 gps_tracking_project/
-├── app/                    # Flask application
-│   ├── __init__.py
-│   ├── routes.py          # Route definitions
-│   ├── models.py          # Database models
-│   └── templates/         # HTML templates
-├── database/              # Database related
-│   ├── schema.sql         # Database schema
-│   └── sample_data.sql    # Sample data
-├── gpx_tools/            # GPX processing tools
-│   └── gpx_processor.py   # GPX parsing and processing
-├── static/               # Static files
-│   ├── css/
-│   ├── js/
-│   └── uploads/          # Upload file storage
-├── sample_data/          # gpx files directory
-│   ├── carrie/
-│   ├── hongxiu/
-│   ├── lynn/
-│   ├── rachel/
-│   ├── ryan/
-│   ├── yuyang/
+├── app/                        # Flask application
+│   ├── templates/              # HTML templates
+│   │   ├── base.html           # Universal master page (including navigation, footer) 
+│   │   ├── dashboard.html      # dashborad 
+│   │   ├── index.html          # homepage
+│   │   ├── uploads.html        # uploads page
+│   │   ├── recalculate.html    # recalculate the max speed by different sampling
+│   │   └── others.html 
+│   ├── __init__.py             # "firmware" for the project, not only a package statement
+│   ├── models.py               # Database models
+│   └── routes.py               # Route definitions
+├── database/                   # Database related
+│   ├── schema.sql              # Database schema
+│   └── sample_data.sql         # Sample data
+├── gpx_tools/                  # GPX processing tools
+│   ├── gpx_converter.py        # extracted key fields, convert to JSON from gpx_processor.py
+│   └── gpx_processor.py        # GPX parsing and processing
+├── sample_data/                # gpx files processing workspace
 │   ├── temp/
 │   └── processed/
-├── tests/                # Test files
-├── config.py             # Configuration file
-├── run.py               # Application startup file
-├── requirements.txt     # Python dependencies
-├── environment.yml      # Conda environment configuration
-├── .gitignore           # git ignore configuration
-└── README.md
+├── static/                     # Static files
+│   ├── css/                    # css file
+│   │   └── style.css      
+│   └── js/                     # all JavaScript files
+│   │   ├── common.js           # common script for other js files 
+│   │   ├── dashboard.js   
+│   │   ├── index.js        
+│   │   ├── uploads.js          # uploads page
+│   │   └── others.js 
+├── settings/                   # config and constants
+├    ├── config.py              # Configuration file
+├    └── constants.py           # constants file
+├── tests/                      # Test files
+├── environment.yml             # Conda environment configuration
+├── README.md                   # Readme
+├── requirements.txt            # Python dependencies
+├── .gitignore                  # git ignore configuration
+└── run.py                      # Application startup file
 
 ```
 

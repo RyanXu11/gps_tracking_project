@@ -58,9 +58,3 @@ htmlcov/
 
 # Documentation
 docs/_build/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# PyCharm
-.idea/

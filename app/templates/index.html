@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Home - GPS Tracking Project{% endblock %}
+
+{% block navigation %}
+<!-- No navigation bar for home page -->
+{% endblock %}
+
+{% block content %}
+<h1 class="center">GPS Tracking Project</h1>
+
+<p>Welcome to the GPS Tracking application. This system allows you to:</p>
+
+<ul class="feature-list">
+    <li>✓ Upload GPX files from your GPS devices</li>
+    <li>✓ View and analyze your tracking data</li>
+    <li>✓ Visualize routes on interactive maps</li>
+    <li>✓ Calculate distance, speed, and duration statistics</li>
+</ul>
+
+<div class="nav-links">
+    <a href="/upload" class="btn">Upload GPX File</a>
+    <a href="/dashboard" class="btn">View Dashboard</a>
+    <a href="/test_db" class="btn">Test Database</a>
+</div>
+{% endblock %}

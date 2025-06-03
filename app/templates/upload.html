@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Upload GPX File - GPS Tracking{% endblock %}
+
+{% block content %}
+<h1>Upload GPX File</h1>
+
+<form method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <label for="username">User:</label>
+        <select name="username" id="username" required>
+            <option value="">Select User</option>
+            <option value="carrie">Carrie</option>
+            <option value="hongxiu">Hongxiu</option>
+            <option value="lynn">Lynn</option>
+            <option value="rachel">Rachel</option>
+            <option value="ryan">Ryan</option>
+            <option value="yuyang">Yuyang</option>
+            <option value="temp">Temp (Testing)</option>
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <label for="skip_points">Speed Calculation Sampling Rate:</label>
+        <select name="skip_points" id="skip_points">
+            <option value="0">Highest (1-second intervals)</option>
+            <option value="1" selected>Very High (2-second intervals)</option>
+            <option value="2">Higher (3-second intervals)</option>
+            <option value="3">High (4-second intervals)</option>
+            <option value="4">Medium (5-second intervals)</option>
+            <option value="5">Low (6-second intervals)</option>
+            <option value="6">Lowerer (7-second intervals)</option>
+            <option value="7">Very Low (8-second intervals)</option>
+            <option value="8">Ultra Low (9-second intervals)</option>
+            <option value="9">Maximum Smoothing (10-second intervals)</option>
+        </select>
+        <div class="file-info">
+            <strong>Sampling Rate Info:</strong><br>
+            • Higher rates: More sensitive to speed changes, may include GPS noise<br>
+            • Lower rates: Smoother results, better for filtering GPS errors<br>
+            • Recommended: High for walking/running, Medium-Low for driving
+        </div>
+    </div>
+    
+    <div class="form-group">
+        <label for="file">GPX File:</label>
+        <input type="file" name="file" id="file" accept=".gpx" required>
+        <div class="file-info">
+            <strong>File Requirements:</strong><br>
+            • Only .gpx files are accepted<br>
+            • Maximum file size: 16MB<br>
+            • File will be stored in database only
+        </div>
+    </div>
+    
+    <button type="submit" class="btn full-width">Upload and Process</button>
+</form>
+{% endblock %}
