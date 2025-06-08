@@ -3,7 +3,7 @@ Flask==2.3.3
 Flask-CORS==4.0.0
 
 # Database
-psycopg2==2.9.10
+psycopg2==2.9.10    # connect to database
 SQLAlchemy==2.0.23 # ORM (optional, simplifies database operations)
 Flask-SQLAlchemy==3.1.1 # Flask integration
 
@@ -15,6 +15,7 @@ pytz==2025.2    #timezone
 # Data processing and analysis
 numpy==2.2.6
 pandas==2.2.3
+scipy=1.15.3
 
 # Google APIs (if needed)
 googlemaps==4.10.0

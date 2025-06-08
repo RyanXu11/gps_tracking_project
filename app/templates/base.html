@@ -1,4 +1,4 @@
-<!-- This file is currently only used for basic debugging, by Ryan, 2025-06-01 -->
+<!-- Updated for modular routes structure and new processing features, 2025-06-05 -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -7,15 +7,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}GPS Tracking Project{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
     <div class="container">
         {% block navigation %}
         <div class="nav-bar">
-            <a href="/">← Home</a>
-            <a href="/upload">Upload</a>
-            <a href="/dashboard">Dashboard</a>
-            <a href="/test_db">Test DB</a>
+            <a href="{{ url_for('index') }}">← Home</a>
+            <a href="{{ url_for('upload_file') }}">Upload</a>
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('test_db') }}">Test DB</a>
         </div>
         {% endblock %}
         
@@ -23,8 +25,9 @@
         {% with messages = get_flashed_messages() %}
             {% if messages %}
                 {% for message in messages %}
-                    <div class="alert {{ 'alert-error' if 'Error' in message or 'Invalid' in message else 'alert-success' }}">
+                    <div class="alert {{ 'alert-error' if 'Error' in message or 'Invalid' in message or 'not found' in message else 'alert-success' }}">
                         {{ message }}
+                        <button type="button" class="alert-close" onclick="this.parentElement.style.display='none';">&times;</button>
                     </div>
                 {% endfor %}
             {% endif %}
@@ -33,5 +36,10 @@
         
         {% block content %}{% endblock %}
     </div>
+
+    
+    <!-- Common JS -->
+    <script src="{{ url_for('static', filename='js/base.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
 </body>
 </html>

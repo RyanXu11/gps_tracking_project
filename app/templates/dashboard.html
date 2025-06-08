@@ -1,58 +1,82 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard - GPS Tracking{% endblock %}
+{% block title %}Upload GPX File - GPS Tracking{% endblock %}
 
 {% block content %}
-<h1>GPS Tracking Dashboard</h1>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 
-<div class="dashboard-actions">
-    <a href="/upload" class="btn">Upload New GPX File</a>
-</div>
+<h1>Dashboard</h1>
 
-<div class="dashboard-stats">
-    <h2>Your Tracks</h2>
-    
-    {% if tracks %}
-        <div class="tracks-table">
-            <table>
-                <tr>
-                    <th>Track Name</th>
-                    <th>Distance (km)</th>
-                    <th>Duration</th>
-                    <th>Max Speed (km/h)</th>
-                    <th>Avg Speed (km/h)</th>
-                    <th>Sampling</th>
-                    <th>Created</th>
-                    <th>Actions</th>
-                </tr>
-            {% for track in tracks %}
-                <tr>
-                    <td>{{ track.track_name }}</td>
-                    <td>{{ "%.2f"|format(track.total_distance or 0) }}</td>
-                    <td>{{ track.total_duration or 'N/A' }}</td>
-                    <td>{{ "%.1f"|format(track.max_speed or 0) }}</td>
-                    <td>{{ "%.1f"|format(track.avg_speed or 0) }}</td>
-                    <td>{{ track.skip_points + 1 }}s</td>
-                    <td>{{ track.created_at.strftime('%Y-%m-%d %H:%M') if track.created_at else 'N/A' }}</td>
-                    <td>
-                        <a href="/recalculate/{{ track.track_id }}" style="color: #007bff; text-decoration: none;">
-                            Recalculate
-                        </a>
-                    </td>
-                </tr>
-            {% endfor %}
-            </table>
+<!-- Other functions can be expanded from Dashboard Page -->
+<div class="dashboard-container">
+    <!-- Summary Statistics Cards -->
+    <div class="summary-cards">
+        <div class="summary-card">
+            <h3>Total Distance: {{ "%.1f"|format(summary_stats.total_distance) }} km</h3>
         </div>
-    {% else %}
-        <p class="no-data">No tracks uploaded yet. <a href="/upload">Upload your first GPX file</a>!</p>
-    {% endif %}
-</div>
+        <div class="summary-card">
+            <h3>Total Tracks: {{ summary_stats.total_tracks }}</h3>
+        </div>
+    </div>
 
-<div class="dashboard-info">
-    <h3>Quick Stats</h3>
-    <p><strong>Total Tracks:</strong> {{ tracks|length if tracks else 0 }}</p>
-    {% if tracks %}
-        <p><strong>Total Distance:</strong> {{ "%.2f"|format(tracks|sum(attribute='total_distance')|default(0)) }} km</p>
-    {% endif %}
+    <!-- Tracks List Section -->
+    <div class="tracks-section">
+        <h2>My Tracks</h2>
+        
+        {% if tracks %}
+            <div class="tracks-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Track Name</th>
+                            <th>Distance (km)</th>
+                            <th>Duration</th>
+                            <th>Average Speed (km/h)</th>
+                            <th>Created Time</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for track in tracks %}
+                        <tr>
+                            <td>{{ track.track_name }}</td>
+                            <td>{{ "%.2f"|format(track.total_distance) }}</td>
+                            <td>{{ track.total_duration }}</td>
+                            <td>{{ "%.1f"|format(track.avg_speed) }}</td>
+                            <td>
+                                {% if track.created_at %}
+                                    {{ track.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <!-- Speed chart page -->
+                                    <a href="{{ url_for('speed_chart', track_id=track.track_id) }}" 
+                                       class="btn btn-primary">
+                                        Speed Analysis
+                                    </a>
+                                    
+                                    <!-- Teammate's map feature (future development) -->
+                                    <a href="{{ url_for('map_view', track_id=track.track_id) }}" 
+                                       class="btn btn-secondary">
+                                        Map View
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="no-data">
+                <h3>🚀 Ready to start tracking?</h3>
+                <p>No tracks uploaded yet. Upload your first GPX file to begin analyzing your GPS data!</p>
+                <a href="{{ url_for('upload_file') }}" class="btn btn-primary">Upload GPX File</a>
+            </div>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

@@ -13,14 +13,16 @@
 
 <ul class="feature-list">
     <li>✓ Upload GPX files from your GPS devices</li>
-    <li>✓ View and analyze your tracking data</li>
-    <li>✓ Visualize routes on interactive maps</li>
+    <li>✓ Analyze tracking data with advanced processing</li>
+    <li>✓ Detect and correct speed outliers</li>
     <li>✓ Calculate distance, speed, and duration statistics</li>
+    <li>✓ Reprocess tracks with different parameters</li>
+    <li>✓ ...</li>    
 </ul>
 
 <div class="nav-links">
-    <a href="/upload" class="btn">Upload GPX File</a>
-    <a href="/dashboard" class="btn">View Dashboard</a>
-    <a href="/test_db" class="btn">Test Database</a>
+    <a href="{{ url_for('upload_file') }}" class="btn btn-primary">Upload GPX File</a>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">View Dashboard</a>
+    <a href="{{ url_for('test_db') }}" class="btn btn-info">Test Database</a>
 </div>
 {% endblock %}

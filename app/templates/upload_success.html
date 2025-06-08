@@ -1,0 +1,83 @@
+<link rel="stylesheet" href="{{ url_for('static', filename='css/upload_success.css') }}">
+<script src="{{ url_for('static', filename='js/upload_success.js') }}"></script>
+
+{% extends "base.html" %}
+
+{% block title %}Upload Successful - GPS Tracking{% endblock %}
+
+{% block content %}
+
+<div class="success-container">
+    <div class="success-header">
+        <h1>Upload Successful!</h1>
+        <p class="success-message">Your GPX file has been processed with smart default settings.</p>
+    </div>
+
+    <div class="processing-summary">
+        <h2>Processing Results: {{ processing_summary.track_name }}</h2>
+        <div class="summary-grid">
+            <div class="summary-card">
+                <h3>{{ "%.2f"|format(processing_summary.total_distance) }} km</h3>
+                <p class="card-label">Total Distance</p>
+            </div>
+            <div class="summary-card">
+                <h3>{{ processing_summary.total_duration }}</h3>
+                <p class="card-label">Duration</p>
+            </div>
+            <div class="summary-card">
+                <h3>{{ "%.1f"|format(processing_summary.max_speed) }} km/h</h3>
+                <p class="card-label">Max Speed</p>
+            </div>
+            <div class="summary-card">
+                <h3>{{ "%.1f"|format(processing_summary.avg_speed) }} km/h</h3>
+                <p class="card-label">Average Speed</p>
+            </div>
+            <div class="summary-card">
+                <h3>{{ processing_summary.waypoint_count }}</h3>
+                <p class="card-label">Data Points</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="processing-details">
+        <h3>Applied Processing</h3>
+        <div class="processing-info">
+            <div class="processing-item">
+                <div class="processing-text">
+                    <strong>IQR Outlier Detection: </strong>
+                    {% if processing_summary.outliers_detected > 0 %}
+                        <p>{{ processing_summary.outliers_detected }} unrealistic speed readings were detected and corrected</p>
+                    {% else %}
+                        <p>No outliers detected - your data looks clean!</p>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="processing-item">
+                <span class="processing-icon"></span>
+                <div class="processing-text">
+                    <strong>Linear Interpolation: </strong>
+                    <p>Smooth handling of data gaps and corrected outliers</p>
+                </div>
+            </div>
+            <div class="processing-item">
+                <div class="processing-text">
+                    <strong>Adjacent Point Analysis: </strong>
+                    <p>Speed calculations using consecutive GPS points for maximum accuracy</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <div class="next-actions">
+            <div class="action-buttons">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline">
+                    View Dashboard
+                </a>
+                <a href="{{ url_for('upload_file') }}" class="btn btn-outline">Upload Another File</a>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

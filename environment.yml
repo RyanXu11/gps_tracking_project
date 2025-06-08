@@ -15,6 +15,7 @@ dependencies:
 - itsdangerous=2.2.0
 - colorama=0.4.6
 - pytz=2025.2
+- scipy=1.15.3
 - pip:
   - flask==2.3.3
   - flask-cors==4.0.0

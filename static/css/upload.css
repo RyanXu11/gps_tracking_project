@@ -1,0 +1,98 @@
+/* Upload Page Styles */
+
+.upload-info {
+    background-color: #e9f5ff;
+    border-left: 6px solid #007bff;
+    padding: 20px;
+    margin-bottom: 30px;
+    border-radius: 6px;
+}
+
+.upload-info h3 {
+    margin-top: 0;
+    color: #007bff;
+}
+
+.processing-defaults p {
+    margin-bottom: 18px;
+    font-size: 16px;
+    color: #333;
+    line-height: 1.6;
+}
+
+.upload-info .note {
+    color: #555;
+    font-style: italic;
+    margin-top: 10px;
+}
+
+/* Upload Form Styles */
+.upload-form {
+    background-color: white;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    max-width: 700px;
+    margin: 0 auto 40px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 6px;
+    color: #333;
+}
+
+select, input[type="file"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+/* Custom file upload area */
+.file-upload-area {
+    border: 2px dashed #007bff;
+    padding: 20px;
+    border-radius: 6px;
+    background-color: #f8f9fa;
+    text-align: center;
+    cursor: pointer;
+}
+
+.file-upload-area:hover {
+    background-color: #eef6ff;
+}
+
+.file-upload-hint p {
+    margin: 0;
+    color: #555;
+    font-size: 15px;
+}
+
+.file-info {
+    margin-top: 12px;
+    font-size: 14px;
+    color: #666;
+    background-color: #f1f1f1;
+    padding: 12px;
+    border-radius: 4px;
+}
+
+
+/* Responsive Layout */
+@media (max-width: 768px) {
+    .steps {
+        flex-direction: column;
+    }
+
+    .upload-form {
+        padding: 20px;
+    }
+}

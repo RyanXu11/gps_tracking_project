@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speed Analysis - GPS Tracking</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="{{ url_for('static', filename='js/speed_chart.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/speed_chart.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>📊 Speed Analysis & Processing</h1>
+        </div>
+
+        <!-- Track Information -->
+        <div class="track-info-section">
+            <div class="track-header">
+                <h2>{{ track.track_name }}</h2>
+                <div class="track-meta">
+                    <span>{{ track.jsonb_waypoints|length if track.jsonb_waypoints else 0 }} waypoints</span>
+                    <span>{{ basic_metrics.get('total_duration') }} duration</span>
+                    <span>{{ "%.2f"|format(basic_metrics.get('total_distance', 0)) }} km total distance</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Speed Chart -->
+        <div class="speed-chart-container">
+            <div class="chart-header">
+                <h3 style="margin: 0;">Speed Comparison {{ track.jsonb_waypoints|length if track.jsonb_waypoints else 0 }} data points</h3>
+                <h3>
+                    Raw Max Speed: 
+                    <span class="highlight-red">
+                        {{ "%.2f"|format(results.get('raw_max_speed', 0)) }} km/h
+                    </span>
+                </h3>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="speedChart"></canvas>
+                <div id="chartLoading" class="loading">Loading speed data...</div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="current-results">
+            <h3>Current Processing Results</h3>
+            <div class="results-grid">
+                <div class="result-card">
+                    <h4>{{ "%.2f"|format(basic_metrics.get('avg_speed', 0)) }}</h4>
+                    <p>Average Speed (km/h)</p>
+                </div>
+                <div class="result-card">
+                    <h4>{{ results.get('outliers_detected', 0) }}</h4>
+                    <p>Outliers Detected</p>
+                </div>
+                <div class="result-card">
+                    <h4>{{ "%.2f"|format(basic_metrics.get('total_distance', 0)) }}</h4>
+                    <p>Total Distance (km)</p>
+                </div>
+                <div class="result-card">
+                    <h4 class="max_speed-red">{{ "%.2f"|format(results.get('processed_max_speed', 0)) }}</h4>
+                    <p>Max Speed (km/h)</p>
+                </div>                
+            </div>
+        </div>
+
+        <!-- Processing Form -->
+        <div class="processing-form-section">
+            <h3>Adjust Processing Parameters</h3>
+            <form id="speedAnalysisForm">
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" name="use_iqr" id="use_iqr" {% if current_settings.get('use_iqr', True) %}checked{% endif %}>
+                        <label for="use_iqr">
+                            <strong>IQR Outlier Detection</strong>
+                            <span class="feature-description">Automatically detect and correct unrealistic speed readings</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="algorithm-select">
+                    <div class="form-group">
+                        <label for="interpolation_method">
+                            <strong>Interpolation Method</strong>
+                        </label>
+                        <select name="interpolation_method" id="interpolation_method">
+                            <option value="linear" {% if current_settings.get('interpolation_method', 'linear') == 'linear' %}selected{% endif %}>Linear</option>
+                            <option value="quadratic" {% if current_settings.get('interpolation_method', 'linear') == 'quadratic' %}selected{% endif %}>Quadratic</option>
+                            <option value="nearest" {% if current_settings.get('interpolation_method', 'linear') == 'nearest' %}selected{% endif %}>Nearest</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="window_size">
+                            <strong>Analysis Window Size</strong>
+                        </label>
+                        <select name="window_size" id="window_size">
+                            <option value="2" {% if current_settings.get('window_size', 2) == 2 %}selected{% endif %}>2 - Adjacent Points</option>
+                            <option value="3" {% if current_settings.get('window_size', 2) == 3 %}selected{% endif %}>3 - Light Smoothing</option>
+                            <option value="4" {% if current_settings.get('window_size', 2) == 4 %}selected{% endif %}>4 - Medium Smoothing</option>
+                            <option value="5" {% if current_settings.get('window_size', 2) == 5 %}selected{% endif %}>5 - Heavy Smoothing</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        Apply New Processing
+                    </button>
+                    <button type="button" onclick="resetToDefaults()" class="btn btn-secondary">
+                        Reset to Defaults
+                    </button>
+                    <button type="button" onclick="goToDashboard()" class="btn btn-outline">
+                        Return to Dashboard
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

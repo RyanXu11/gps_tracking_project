@@ -6,6 +6,11 @@ from settings.config import Config
 app = Flask(__name__, static_folder='../static')
 app.config.from_object(Config)
 
+import os
+print(f"Static folder path: {app.static_folder}")
+print(f"Static folder exists: {os.path.exists(app.static_folder)}")
+print(f"CSS file exists: {os.path.exists(os.path.join(app.static_folder, 'css/upload_success.css'))}")
+
 def get_db_connection():
     """connect to database"""
     conn = psycopg2.connect(
@@ -27,7 +32,8 @@ def test_db_connection():
         print(f"Database connection failed: {e}")
         return False
 
-from app import routes
+# Import routes after app initialization to avoid circular imports
+from app.routes import main, upload, track, api
 
 print("Registered routes:")
 for rule in app.url_map.iter_rules():

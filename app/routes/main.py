@@ -1,0 +1,72 @@
+"""
+Main application routes
+Handles home page, dashboard, and general navigation
+"""
+
+from flask import render_template, jsonify
+from app import app
+from app.models import Track
+
+
+@app.route('/')
+def index():
+    """Home page"""
+    return render_template('index.html')
+
+
+@app.route('/dashboard')
+def dashboard():
+    """User dashboard showing all tracks with simplified view"""
+    user_id = 1  # Currently for debugging only
+    tracks = Track.get_by_user(user_id)
+    
+    # Prepare simplified track data for display
+    processed_tracks = []
+    total_distance = 0
+    
+    if tracks:
+        for track in tracks:
+            stats = track.get('jsonb_statistics', {})
+            basic_metrics = stats.get('basic_metrics', {})
+            
+            # Simplified track data - only essential fields
+            track_data = {
+                'track_id': track.get('track_id'),
+                'track_name': track.get('track_name', 'Unknown'),
+                'total_distance': basic_metrics.get('total_distance', 0),
+                'total_duration': basic_metrics.get('total_duration', 'N/A'),
+                'avg_speed': basic_metrics.get('avg_speed', 0),
+                'created_at': track.get('created_at')
+            }
+            
+            processed_tracks.append(track_data)
+            total_distance += track_data['total_distance']
+    
+    summary_stats = {
+        'total_distance': total_distance,
+        'total_tracks': len(processed_tracks)
+    }
+    
+    return render_template('dashboard.html', tracks=processed_tracks, summary_stats=summary_stats)
+
+
+@app.route('/map_view/<int:track_id>')
+def map_view(track_id):
+    """Map view page - placeholder for teammate's development"""
+    return f"<h1>Map View for Track {track_id}</h1><p>This feature will be developed by teammates!</p>"
+
+@app.route('/test_db')
+def test_db():
+    """Test database connection and show basic info"""
+    try:
+        tracks = Track.get_by_user(1)
+        return jsonify({
+            'status': 'success',
+            'message': 'Database connection working',
+            'track_count': len(tracks) if tracks else 0
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': f'Database error: {str(e)}'
+        })

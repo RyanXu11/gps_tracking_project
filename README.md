@@ -20,29 +20,36 @@ A web-based GPS track upload, storage, and visualization analysis system. Users 
 ```
 gps_tracking_project/
 ├── app/                        # Flask application
+│   ├── routes/                 # HTML templates
+│   │   ├── __init__.py         # initial file for routes
+│   │   ├── api.py              # API routes for AJAX requests and data retrieval 
+│   │   ├── main.py             # Main application routes, Handles home page, dashboard, and general navigation  
+│   │   ├── track.py            # Track processing and reprocessing routes 
+│   │   └── upload.py           # File upload and processing routes
 │   ├── templates/              # HTML templates
 │   │   ├── base.html           # Universal master page (including navigation, footer) 
 │   │   ├── dashboard.html      # dashborad 
 │   │   ├── index.html          # homepage
-│   │   ├── uploads.html        # uploads page
-│   │   ├── recalculate.html    # recalculate the max speed by different sampling
-│   │   └── others.html 
+│   │   ├── speed_chart.html    # recalculate the max speed by different sampling
+│   │   ├── upload_sucess.html  # upload sucess feedback page
+│   │   ├── upload.html         # upload page
+│   │   └── ....html            # others pages
 │   ├── __init__.py             # "firmware" for the project, not only a package statement
-│   ├── models.py               # Database models
-│   └── routes.py               # Route definitions
+│   └── models.py               # Database models
 ├── database/                   # Database related
-│   ├── schema.sql              # Database schema
-│   └── sample_data.sql         # Sample data
+│   ├── schema1.sql             # Database schema solution 1
+│   └── schema2.sql             # Database schema solution 2, the final
 ├── gpx_tools/                  # GPX processing tools
-│   ├── gpx_converter.py        # extracted key fields, convert to JSON from gpx_processor.py
-│   └── gpx_processor.py        # GPX parsing and processing
+│   ├── __init__.py             # extracted key fields, convert to JSON from gpx_processor.py
+│   ├── gpx_processor.py        # GPX parsing and processing
+│   └── utils.py                # tools for gpx processing
 ├── sample_data/                # gpx files processing workspace
 │   ├── temp/
 │   └── processed/
 ├── static/                     # Static files
-│   ├── css/                    # css file
+│   ├── css/                    # css files
 │   │   └── style.css      
-│   └── js/                     # all JavaScript files
+│   └── js/                     # JavaScript files
 │   │   ├── common.js           # common script for other js files 
 │   │   ├── dashboard.js   
 │   │   ├── index.js        
@@ -128,7 +135,7 @@ Visit http://localhost:5000
 ## Features
 
 - [ ] User registration and login
-- [ ] GPX file upload and parsing
+- [X] GPX file upload and parsing
 - [ ] Track data storage in PostgreSQL
 - [ ] Interactive map track display
 - [ ] Track statistical analysis charts
@@ -151,13 +158,13 @@ Visit http://localhost:5000
 ### Sprint 1 (Week 1-2)
 - [x] Project architecture design
 - [x] Database schema design
-- [ ] Basic Flask application setup
-- [ ] GPX file parsing functionality
+- [x] Basic Flask application setup
+- [x] GPX file parsing functionality
 
 ### Sprint 2 (Week 3-4)
 - [ ] User interface development
 - [ ] Database integration
-- [ ] File upload functionality
+- [x] File upload functionality
 - [ ] Basic map display
 
 ### Sprint 3 (Week 5-6)
@@ -182,13 +189,13 @@ Visit http://localhost:5000
 - description
 - is_public
 - gpx_file (GPX/XML)
-- jsonb_track_data (JSONB)
-- start_time, end_time, 
-- total_duration, total_distance
-- max_speed, avg_speed
-- created_at, updated_at
+- jsonb_waypoints JSONB,             -- Structured data after GPX parsing
+- jsonb_metadata JSONB,              -- Metadata for the GPX file
+- jsonb_statistics JSONB,            -- Consolidated statistics and indicators
+- created_at, 
+- updated_at
 
-For detailed architecture see `database/schema.sql` & `database/sgps_tracking_db - Diagram.png`
+For detailed architecture see `database/schema2.sql` & `database/ERD2.png`
 
 ## API Documentation
 

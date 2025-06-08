@@ -69,6 +69,18 @@ h1.center {
     width: 100%;
 }
 
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.action-buttons .btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
 /* Forms */
 .form-group {
     margin-bottom: 20px;

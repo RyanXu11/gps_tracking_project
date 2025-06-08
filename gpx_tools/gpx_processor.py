@@ -1,49 +1,41 @@
 import gpxpy
 import pytz
-from datetime import datetime
+import pandas as pd
+import numpy as np
 from typing import List, Dict, Optional
 import math
 
+from settings.constants import TIMEZONE_STR
+from .utils import (
+    haversine_distance, 
+    format_duration,
+    detect_outliers_iqr,
+    interpolate_outliers,
+    safe_division
+)
 
 class GPXProcessor:
-    def __init__(self, timezone: str = 'America/Toronto'):
+    def __init__(self, timezone: str = TIMEZONE_STR):
         """
-        Initialize GPX processor with timezone for time conversion
+        Initialize GPX processor with timezone
         
         Args:
             timezone: Target timezone for conversion (default: America/Toronto)
         """
         self.timezone = pytz.timezone(timezone)
     
-    def parse_gpx_file(self, file_path: str, skip_points: int = 0) -> Dict:
-        """
-        Parse GPX file from file path and extract track data with timezone conversion
-        
-        Args:
-            file_path: Path to GPX file
-            skip_points: Number of points to skip for speed calculation (default: 1)
-            
-        Returns:
-            Dictionary containing waypoints and metadata
-        """
-        try:
-            with open(file_path, 'r', encoding='utf-8') as file:
-                gpx_content = file.read()
-            return self.parse_gpx(gpx_content, skip_points)
-            
-        except Exception as e:
-            raise Exception(f"Error reading GPX file {file_path}: {str(e)}")
-    
-    def parse_gpx(self, gpx_content: str, skip_points: int = 0) -> Dict:
+    def parse_gpx(self, gpx_content: str) -> Dict:
         """
         Parse GPX content string and extract track data with timezone conversion
         
         Args:
             gpx_content: Raw GPX file content as string
-            skip_points: Number of points to skip for speed calculation (default: 1)
             
         Returns:
-            Dictionary containing waypoints and metadata
+            Dictionary containing three separate JSONB components:
+            - jsonb_waypoints: Array of waypoint objects
+            - jsonb_metadata: GPX file metadata object  
+            - jsonb_statistics: Basic statistics object (will be enhanced by processing)
         """
         try:
             # Parse GPX using gpxpy
@@ -53,16 +45,11 @@ class GPXProcessor:
             # Extract waypoints from all tracks and segments
             for track in gpx.tracks:
                 for segment in track.segments:
-                    for point in segment.points:
-                        # Convert UTC time to local timezone
-                        local_time = None
-                        if point.time:
-                            local_time = point.time.astimezone(self.timezone)
-                        
+                    for point in segment.points:                        
                         waypoint = {
-                            'latitude': point.latitude,
-                            'longitude': point.longitude,
-                            'timestamp': local_time.strftime('%Y-%m-%dT%H:%M:%S') if local_time else None,
+                            'lat': point.latitude,
+                            'lon': point.longitude,
+                            'timestamp': point.time.isoformat() if point.time else None,
                             'elevation': point.elevation or 0.0
                         }
                         waypoints.append(waypoint)
@@ -70,172 +57,246 @@ class GPXProcessor:
             if not waypoints:
                 raise ValueError("No valid waypoints found in GPX file")
             
-            # Calculate track statistics
-            statistics = self._calculate_track_statistics(waypoints, skip_points)
+            # Generate metadata from GPX
+            jsonb_metadata = self._generate_metadata(gpx, waypoints)
             
-            # Get metadata from GPX
-            track_info = {
-                'creator': getattr(gpx, 'creator', 'Unknown'),
-                'version': getattr(gpx, 'version', '1.1'),
-                'name': getattr(gpx, 'name', None),
-                'description': getattr(gpx, 'description', None),
-                'waypoint_count': len(waypoints),
-                'track_count': len(gpx.tracks),
-                'route_count': len(gpx.routes) if hasattr(gpx, 'routes') else 0,
-                'waypoint_count_gpx': len(gpx.waypoints) if hasattr(gpx, 'waypoints') else 0
-            }
+            # Generate initial statistics structure (raw data only)
+            jsonb_statistics = self._generate_basic_statistics(waypoints)
             
             return {
-                'waypoints': waypoints,
-                'statistics': statistics,
-                'metadata': track_info
+                'jsonb_waypoints': waypoints,
+                'jsonb_metadata': jsonb_metadata,   
+                'jsonb_statistics': jsonb_statistics
             }
             
         except Exception as e:
             raise Exception(f"Error parsing GPX file: {str(e)}")
+
+    def _generate_metadata(self, gpx, waypoints: List[Dict]) -> Dict:
+        """Extract metadata from GPX object"""
+        metadata = {
+            'waypoint_count': len(waypoints),
+            'creator': getattr(gpx, 'creator', 'Unknown'),
+            'version': getattr(gpx, 'version', '1.1'),
+            'name': None,
+            'description': None,
+            'track_count': len(gpx.tracks),
+            'route_count': len(gpx.routes)
+        }
+        
+        # Try to get name and description from first track
+        if gpx.tracks:
+            first_track = gpx.tracks[0]
+            metadata['name'] = getattr(first_track, 'name', None)
+            metadata['description'] = getattr(first_track, 'description', None)
+        
+        return metadata
     
-    def _calculate_track_statistics(self, waypoints: List[Dict], skip_points: int = 0) -> Dict:
+    def process_with_methods(self, waypoints: List[Dict], use_iqr: bool = False, 
+                           window_size: int = 2,
+                           interpolation_method: str = "linear") -> Dict:
         """
-        Calculate comprehensive track statistics
+        Process waypoints with selected methods using pandas for efficiency
         
         Args:
             waypoints: List of waypoint dictionaries
-            skip_points: Number of points to skip for speed calculation (0 = use all points)
+            use_iqr: Whether to apply IQR outlier removal
+            window_size: Window size for speed calculation (2=adjacent points, >2=moving average)
+            interpolation_method: Pandas interpolation method ('linear', 'quadratic', 'nearest', etc.)
             
         Returns:
-            Dictionary containing track statistics
+            Complete jsonb_statistics structure with processing results
         """
         if len(waypoints) < 2:
-            return {}
+            return self._generate_basic_statistics(waypoints)
         
-        # Calculate total distance
-        total_distance = 0.0
-        for i in range(1, len(waypoints)):
-            distance = self._calculate_distance(
-                waypoints[i-1]['latitude'], waypoints[i-1]['longitude'],
-                waypoints[i]['latitude'], waypoints[i]['longitude']
+        # Start with basic metrics
+        stats = self._generate_basic_statistics(waypoints)
+        
+        # Convert to pandas DataFrame for efficient processing
+        df = pd.DataFrame(waypoints)
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        
+        # Calculate initial speeds based on window size
+        raw_speeds = self._calculate_speeds_with_window(df, window_size)
+        
+        # For comparison, always calculate adjacent speeds as baseline (window_size=2)
+        baseline_speeds = self._calculate_speeds_with_window(df, 2)
+        
+        outliers_detected = 0
+        outliers_interpolated = 0
+        processed_speeds = raw_speeds.copy()
+        
+        # Step 1: IQR outlier detection and interpolation on speeds
+        if use_iqr and len(raw_speeds) > 0:
+            processed_speeds, outliers_detected, outliers_interpolated = self._detect_and_interpolate_speed_outliers(
+                raw_speeds, interpolation_method
             )
-            total_distance += distance
         
-        # Calculate speeds with skip interval
-        speeds = self._calculate_speeds_with_skip(waypoints, skip_points)
-        
-        # Time calculations - use the already converted local timestamps
-        start_time_str = waypoints[0]['timestamp']
-        end_time_str = waypoints[-1]['timestamp']
-        
-        # Handle ISO format: "2025-05-21T19:12:14"
-        start_time_naive = datetime.fromisoformat(start_time_str)
-        end_time_naive = datetime.fromisoformat(end_time_str)
-        
-        # Time calculations
-        start_time = self.timezone.localize(start_time_naive)
-        end_time = self.timezone.localize(end_time_naive)
-        total_duration = (end_time - start_time).total_seconds()
-        print(f"DEBUG: Original timestamps: {start_time_str} -> {end_time_str}")
-        print(f"DEBUG: Localized times: {start_time} -> {end_time}")
-        print(f"DEBUG: Localized times: {start_time.strftime('%Y-%m-%d %H:%M:%S')} -> {end_time.strftime('%Y-%m-%d %H:%M:%S')}")
-        
-        # Basic statistics
-        stats = {
-            'total_distance_km': round(total_distance, 2),
-            'total_duration_seconds': int(total_duration),
-            'start_time': start_time.strftime('%Y-%m-%d %H:%M:%S'),
-            'end_time': end_time.strftime('%Y-%m-%d %H:%M:%S'),
-            'waypoint_count': len(waypoints),
-            'speed_samples': len(speeds),
-            'raw_speeds': speeds
+        # Update statistics
+        stats['processing_methods'] = {
+            'IQR_Outlier': use_iqr,
+            'Moving_Average': window_size > 2,
+            'Window_Size': window_size,
+            'Interpolation_Method': interpolation_method if use_iqr else None
         }
         
-        # Speed statistics (if we have valid speed data)
-        if speeds:
-            filtered_speeds = self._filter_by_outliers(speeds)
-            #filtered_speeds = speeds
-            
-            if filtered_speeds:
-                stats.update({
-                    'max_speed_kmh': round(max(filtered_speeds), 2),
-                    'avg_speed_kmh': round(sum(filtered_speeds) / len(filtered_speeds), 2),
-                    'speed_outliers_filtered': len(speeds) - len(filtered_speeds)
-                })
+        stats['results'] = {
+            'raw_max_speed': round(baseline_speeds.max(), 2) if len(baseline_speeds) > 0 else 0.0,
+            'processed_max_speed': round(processed_speeds.max(), 2) if len(processed_speeds) > 0 else 0.0,
+            'outliers_detected': int(outliers_detected),
+            'outliers_interpolated': int(outliers_interpolated),
+            'data_points_remaining': len(processed_speeds)
+        }
         
         return stats
     
-    def _calculate_speeds_with_skip(self, waypoints: List[Dict], skip_points: int = 0) -> List[float]:
+    def _detect_and_interpolate_speed_outliers(self, speeds: pd.Series, interpolation_method: str, 
+                                              iqr_multiplier: float = 1.5) -> tuple:
         """
-        Calculate speeds with point skipping for noise reduction
+        Detect outliers in speed data using IQR method and interpolate them
         
         Args:
-            waypoints: List of waypoint dictionaries
-            skip_points: Number of points to skip between calculations
+            speeds: Series of speed values in km/h
+            interpolation_method: Pandas interpolation method ('linear', 'quadratic', etc.)
+            iqr_multiplier: IQR multiplier for outlier detection (default: 1.5)
             
         Returns:
-            List of speeds in km/h
+            Tuple of (processed_speeds, outliers_detected, outliers_interpolated)
         """
+        if len(speeds) == 0:
+            return speeds, 0, 0
+        
+        if len(speeds) == 0:
+            return speeds, 0, 0
+        
+        # Use utility functions for outlier detection and interpolation
+        outlier_mask = detect_outliers_iqr(speeds, iqr_multiplier, upper_only=True)
+        outliers_detected = outlier_mask.sum()
+        
+        if outliers_detected > 0:
+            processed_speeds = interpolate_outliers(speeds, outlier_mask, interpolation_method)
+            return processed_speeds, int(outliers_detected), int(outliers_detected)
+        
+        return speeds, 0, 0
+    
+    def _calculate_speeds_with_window(self, df: pd.DataFrame, window_size: int) -> pd.Series:
+        """
+        Calculate speeds using specified window size
+        
+        Args:
+            df: DataFrame with waypoints (lat, lon, timestamp columns)
+            window_size: Window size (2=adjacent points, >2=moving average)
+            
+        Returns:
+            Series of speeds in km/h
+        """
+        if len(df) < 2:
+            return pd.Series([])
+        
+        # For window_size = 2 (adjacent points), use vectorized pandas operations
+        if window_size == 2:
+            # Calculate distances using vectorized operations
+            lat1, lon1 = df['lat'].iloc[:-1], df['lon'].iloc[:-1]
+            lat2, lon2 = df['lat'].iloc[1:], df['lon'].iloc[1:]
+            
+            distances = haversine_distance(lat1, lon1, lat2, lon2)
+            
+            # Calculate time differences
+            time_diffs = df['timestamp'].diff().dt.total_seconds().iloc[1:]
+            
+            # Calculate speeds (avoid division by zero)
+            speeds = safe_division((distances * 3.6), time_diffs, 0)
+            
+            return pd.Series(speeds)
+        
+        # For window_size > 2 (moving average approach)
+        if len(df) < window_size:
+            # Fall back to adjacent points if not enough data
+            return self._calculate_speeds_with_window(df, 2)
+        
         speeds = []
-        interval = skip_points + 1  # Convert skip_points to interval
         
-        for i in range(interval, len(waypoints)):
-            try:
-                # Get points with interval
-                point1 = waypoints[i - interval]
-                point2 = waypoints[i]
-                
-                # Calculate distance
-                distance = self._calculate_distance(
-                    point1['latitude'], point1['longitude'],
-                    point2['latitude'], point2['longitude']
-                )
-                
-                # Calculate time difference
-                time1 = datetime.fromisoformat(point1['timestamp'])
-                time2 = datetime.fromisoformat(point2['timestamp'])
-                time_diff = (time2 - time1).total_seconds()
-                
-                if time_diff > 0:
-                    # Speed in km/h
-                    speed = (distance / time_diff) * 3.6
-                    speeds.append(speed)
-                    
-            except (ValueError, TypeError, KeyError) as e:
-                # Skip invalid data points
-                continue
+        for i in range(window_size, len(df)):
+            point1 = df.iloc[i - window_size]
+            point2 = df.iloc[i]
+            
+            # Calculate distance
+            distance = haversine_distance(
+                point1['lat'], point1['lon'],
+                point2['lat'], point2['lon']
+            )
+            
+            # Calculate time difference
+            time_diff = (point2['timestamp'] - point1['timestamp']).total_seconds()
+            
+            if time_diff > 0:
+                speed = (distance / time_diff) * 3.6
+                speeds.append(speed)
         
-        return speeds
+        return pd.Series(speeds)
+
     
-    def _calculate_distance(self, lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    def _generate_basic_statistics(self, waypoints: List[Dict]) -> Dict:
+        """Generate basic statistics from raw waypoints"""
+        if len(waypoints) < 2:
+            return {
+                'basic_metrics': {},
+                'processing_methods': {},
+                'results': {}
+            }
+        
+        # Calculate basic metrics using pandas for efficiency
+        df = pd.DataFrame(waypoints)
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        
+        # Total distance
+        total_distance = self._calculate_total_distance(df)
+        
+        # Time information
+        start_time = waypoints[0]['timestamp']
+        end_time = waypoints[-1]['timestamp']
+        
+        # Duration calculation
+        start_dt = pd.to_datetime(start_time)
+        end_dt = pd.to_datetime(end_time)
+        total_duration_seconds = (end_dt - start_dt).total_seconds()
+        
+        # Average speed
+        avg_speed = (total_distance / (total_duration_seconds / 3600)) if total_duration_seconds > 0 else 0
+        
+        # Format duration as HH:MM:SS
+        duration_formatted = format_duration(total_duration_seconds)
+        
+        return {
+            'basic_metrics': {
+                'start_time': start_time,
+                'end_time': end_time,
+                'total_distance': round(total_distance, 2),
+                'total_duration': duration_formatted,
+                'avg_speed': round(avg_speed, 2)
+            },
+            'processing_methods': {},
+            'results': {}
+        }
+    
+    def _calculate_total_distance(self, df: pd.DataFrame) -> float:
         """
-        Calculate distance between two geographic points using Haversine formula
+        Calculate total distance using pandas vectorization
         
         Args:
-            lat1, lon1: First point coordinates
-            lat2, lon2: Second point coordinates
+            df: DataFrame with waypoints
             
         Returns:
-            Distance in meters
+            Total distance in kilometers
         """
-        # Convert to radians
-        lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
+        if len(df) < 2:
+            return 0.0
         
-        # Haversine formula
-        dlat = lat2 - lat1
-        dlon = lon2 - lon1
-        a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
-        c = 2 * math.asin(math.sqrt(a))
+        # Use vectorized distance calculation
+        distances = haversine_distance(
+            df['lat'].iloc[:-1], df['lon'].iloc[:-1],
+            df['lat'].iloc[1:], df['lon'].iloc[1:]
+        )
         
-        # Earth radius in meters
-        earth_radius = 6371000
-        return earth_radius * c
-    
-    def _filter_by_outliers(self, speeds: List[float], max_speed: float = 200.0) -> List[float]:
-        """
-        Filter out unrealistic speed values
-        
-        Args:
-            speeds: List of speed values in km/h
-            max_speed: Maximum realistic speed in km/h
-            
-        Returns:
-            Filtered list of speeds
-        """
-        return [speed for speed in speeds if 0 <= speed <= max_speed]
+        return float(distances.sum() / 1000)  # Convert to kilometers
