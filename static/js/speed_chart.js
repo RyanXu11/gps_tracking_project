@@ -10,13 +10,13 @@ function getTrackId() {
 
 // Load page data when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("document.addEventListener before loadSpeedChart");
+    // console.log("document.addEventListener before loadSpeedChart");  // for debug
     loadSpeedChart();
-    console.log("document.addEventListener after loadSpeedChart");
+    // console.log("document.addEventListener after loadSpeedChart");   // for debug
     
     // Bind form submission
     const form = document.getElementById('speedAnalysisForm');
-    console.log("document.addEventListener const form");
+    // console.log("document.addEventListener const form");         // for debug
     if (form) {
         form.addEventListener('submit', handleFormSubmission);
     }

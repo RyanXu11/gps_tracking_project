@@ -6,6 +6,6 @@ Import all route modules here to register them with Flask app
 
 from . import main
 from . import upload
-from . import track
+from . import speed
 from . import api
 

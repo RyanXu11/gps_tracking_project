@@ -33,7 +33,7 @@ def test_db_connection():
         return False
 
 # Import routes after app initialization to avoid circular imports
-from app.routes import main, upload, track, api
+from app.routes import main, upload, speed, api
 
 print("Registered routes:")
 for rule in app.url_map.iter_rules():

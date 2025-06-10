@@ -1,6 +1,9 @@
 """
 API routes for AJAX requests and data retrieval
 Handles JSON responses for frontend functionality using new three-field structure
+
+@app.route('/api/user/<int:user_id>/tracks'): get_user_tracks(user_id)
+
 """
 
 from flask import jsonify
@@ -8,10 +11,8 @@ import pytz
 from app import app
 from app.models import Track
 from gpx_tools.gpx_processor import GPXProcessor
-import pandas as pd
 
 from gpx_tools.utils import DateTimeUtils
-from gpx_tools.utils import detect_outliers_iqr, interpolate_outliers
 from settings.constants import TIMEZONE_STR
 
 
@@ -40,85 +41,6 @@ def get_user_tracks(user_id):
         })
     
     return jsonify(formatted_tracks)
-
-
-@app.route('/api/track/<int:track_id>/speeds')
-def get_track_speeds(track_id):
-    """Get speed data for track visualization using new structure"""
-    try:
-        track = Track.get_by_id(track_id)
-        
-        if not track or not track.get('jsonb_waypoints'):
-            return jsonify({'error': 'No track data available'}), 404
-        
-        waypoints = track['jsonb_waypoints']
-        statistics = track.get('jsonb_statistics', {})
-        processing_methods = statistics.get('processing_methods', {})
-        results = statistics.get('results', {})
-        
-        # Create processor instance
-        processor = GPXProcessor()
-        
-        # Convert waypoints to DataFrame for speed calculations
-        df = pd.DataFrame(waypoints)
-        
-        # Ensure timestamp is datetime type for speed calculations
-        if 'timestamp' in df.columns:
-            if not pd.api.types.is_datetime64_any_dtype(df['timestamp']):
-                df['timestamp'] = pd.to_datetime(df['timestamp'])
-        
-        # Get raw speeds (adjacent points method)
-        raw_speeds = processor._calculate_speeds_with_window(df, 2)
-        
-        # Get processed speeds based on stored processing methods
-        processed_speeds = raw_speeds.copy()
-        
-        if processing_methods.get('IQR_Outlier') or processing_methods.get('Moving_Average'):
-            window_size = processing_methods.get('Window_Size', 2)
-            
-            # Recalculate with the stored window size
-            if window_size > 2:
-                processed_speeds = processor._calculate_speeds_with_window(df, window_size)
-            
-            # Apply IQR outlier detection if it was used
-            if processing_methods.get('IQR_Outlier'):
-                from gpx_tools.utils import detect_outliers_iqr, interpolate_outliers
-                outlier_mask = detect_outliers_iqr(processed_speeds)
-                interpolation_method = processing_methods.get('Interpolation_Method', 'linear')
-                processed_speeds = interpolate_outliers(
-                    processed_speeds, 
-                    outlier_mask,
-                    interpolation_method
-                )
-        
-        # Create timestamps for chart display with Ottawa timezone
-        if 'timestamp' in df.columns and not df['timestamp'].isna().all():
-            from gpx_tools.utils import DateTimeUtils
-            timestamps = DateTimeUtils.format_timestamps_for_chart(df['timestamp'])
-        else:
-            timestamps = [f"Point {i+1}" for i in range(len(raw_speeds))]
-        
-        return jsonify({
-            'raw_speeds': raw_speeds.tolist() if hasattr(raw_speeds, 'tolist') else list(raw_speeds),
-            'processed_speeds': processed_speeds.tolist() if hasattr(processed_speeds, 'tolist') else list(processed_speeds),
-            'timestamps': timestamps,
-            'waypoint_count': len(waypoints),
-            'speed_samples': len(raw_speeds),
-            'processing_methods': processing_methods,
-            'statistics': {
-                'raw_max_speed': results.get('raw_max_speed', float(raw_speeds.max()) if len(raw_speeds) > 0 else 0),
-                'processed_max_speed': results.get('processed_max_speed', float(processed_speeds.max()) if len(processed_speeds) > 0 else 0),
-                'outliers_detected': results.get('outliers_detected', 0),
-                'outliers_interpolated': results.get('outliers_interpolated', 0),
-                'data_points_remaining': results.get('data_points_remaining', len(processed_speeds))
-            }
-        })
-        
-    except Exception as e:
-        print(f"Error in get_track_speeds: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/track/<int:track_id>/processing_info')
@@ -312,3 +234,21 @@ def get_user_statistics(user_id):
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+    
+@app.route('/api/track_data/<int:track_id>')
+def api_track_data(track_id):
+    """API endpoint to get track data in JSON format"""
+    track = Track.get_by_id(track_id)
+    if not track:
+        return jsonify({'error': 'Track not found'}), 404
+    
+    # Return structured track data
+    return jsonify({
+        'track_id': track_id,
+        'track_name': track.get('track_name'),
+        'waypoints': track.get('jsonb_waypoints', []),
+        'metadata': track.get('jsonb_metadata', {}),
+        'statistics': track.get('jsonb_statistics', {}),
+        'created_at': track.get('created_at').isoformat() if track.get('created_at') else None
+    })
