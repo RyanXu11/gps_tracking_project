@@ -52,7 +52,7 @@ def calculate_speeds(df, methods):
 
     # Bug fix: if first value still NaN after interpolation, use nearest valid value
     if processed.notna().any():  
-        processed = processed.bfill()  # 向后填充
+        processed = processed.bfill()
     else:
         processed = processed.fillna(0.0)
 
