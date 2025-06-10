@@ -114,7 +114,8 @@ CREATE DATABASE gps_tracking_db
     ENCODING = 'UTF8';
 
 # Run database schema
-psql -d gps_tracking_db -f database/schema.sql
+Run the schema2.sql one by one, or
+psql -d gps_tracking_db -f database/schema2.sql
 ```
 
 ### 4. Environment Variable Configuration

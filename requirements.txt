@@ -15,7 +15,7 @@ pytz==2025.2    #timezone
 # Data processing and analysis
 numpy==2.2.6
 pandas==2.2.3
-scipy=1.15.3
+scipy==1.15.3
 
 # Google APIs (if needed)
 googlemaps==4.10.0

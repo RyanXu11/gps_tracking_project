@@ -1,3 +1,28 @@
+-- GPS Tracking Database Schema
+-- CST8276 Database Team Project - Group 2
+Create database user for the team (run as postgres superuser)
+CREATE USER dbgroup2 WITH PASSWORD 'cst8276';
+ALTER USER dbgroup2 CREATEDB;
+
+Create database with team user as owner
+DROP DATABASE IF EXISTS gps_tracking_db;
+
+CREATE DATABASE gps_tracking_db
+   WITH 
+   OWNER = dbgroup2
+   ENCODING = 'UTF8';
+
+-- Grant necessary permissions
+GRANT ALL PRIVILEGES ON DATABASE gps_tracking_db TO dbgroup2;
+
+-- Verify database creation
+SELECT datname FROM pg_database WHERE datistemplate = false;
+
+-- Connect to gps_tracking_db in PostgreSQL, or create new connection in DBeaver
+\c gps_tracking_db;
+
+
+-------
 DROP TABLE if exists tracks;
 DROP TABLE if exists users;
 
