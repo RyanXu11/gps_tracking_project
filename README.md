@@ -137,7 +137,7 @@ Visit http://localhost:5000
 
 - [ ] User registration and login
 - [X] GPX file upload and parsing
-- [ ] Track data storage in PostgreSQL
+- [X] Track data storage in PostgreSQL
 - [ ] Interactive map track display
 - [ ] Track statistical analysis charts
 - [ ] Track time segment cutting functionality
@@ -206,3 +206,5 @@ For detailed architecture see `database/schema2.sql` & `database/ERD2.png`
 ## License
 
 This project is for educational purposes only.
+
+(Last Modified Date: 2025-06-28)

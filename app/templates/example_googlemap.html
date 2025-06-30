@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Algonquin College Google Map Example</title>
+  <meta charset="utf-8" />
+  <style>
+    /* Set the map size */
+    #map {
+      height: 500px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <h3>Algonquin College Map</h3>
+  <div id="map"></div>
+
+  <!-- Google Maps JavaScript API -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDIC1kYIY2KgufwI8iwGGIDYF8OUThkiiI"></script>
+
+  <script>
+    function initMap() {
+      // Set the map center: Algonquin College
+      const center = { lat: 45.3499, lng: -75.7544 };
+
+      // Create map
+      const map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 15,
+        center: center,
+      });
+
+      // Add Marker
+      const marker = new google.maps.Marker({
+        position: center,
+        map: map,
+        title: "Algonquin College",
+      });
+    }
+
+    // init
+    initMap();
+  </script>
+
+</body>
+</html>
