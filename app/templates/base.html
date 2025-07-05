@@ -14,9 +14,9 @@
     <div class="container">
         {% block navigation %}
         <div class="nav-bar">
-            <a href="{{ url_for('index') }}">← Home</a>
-            <a href="{{ url_for('upload_file') }}">Upload</a>
-            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('index') }}" {% if request.endpoint == 'index' %}class="active"{% endif %}>← Home</a>
+            <a href="{{ url_for('upload_file') }}" {% if request.endpoint == 'upload_file' %}class="active"{% endif %}>Upload</a>
+            <a href="{{ url_for('dashboard') }}" {% if request.endpoint == 'dashboard' %}class="active"{% endif %}>Dashboard</a>
             <a href="{{ url_for('test_db') }}">Test DB</a>
         </div>
         {% endblock %}
