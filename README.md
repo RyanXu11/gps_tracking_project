@@ -119,12 +119,8 @@ psql -d gps_tracking_db -f database/schema2.sql
 ```
 
 ### 4. Environment Variable Configuration
-Copy `.env.example` to `.env` and fill in configuration:
-```env
-DATABASE_URL=postgresql://username:password@localhost:5432/gps_tracking_db
-FLASK_SECRET_KEY=your-secret-key
-GOOGLE_MAPS_API_KEY=your-google-api-key
-```
+Please note configuration in /settings/config.py & constants.py
+
 
 ### 5. Run Application
 ```bash
