@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}Track Animation - GPS Tracking{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/animation.css') }}">
+
+<div class="animation-container">
+    <div class="animation-header">
+        <h1>Track Animation</h1>
+        <div class="track-info">
+            <span id="track-name">Loading...</span>
+            <span id="track-distance">Loading...</span>
+        </div>
+        <div class="animation-controls">
+            <button id="playBtn" class="control-btn">
+                Play
+            </button>
+            <button id="pauseBtn" class="control-btn" style="display: none;">
+                Pause
+            </button>
+            <button id="resetBtn" class="control-btn">
+                Reset
+            </button>
+            <div class="speed-control">
+                <label for="speedSlider">Speed:</label>
+                <input type="range" id="speedSlider" min="0.5" max="5" step="0.5" value="1">
+                <span id="speedValue">1x</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="animation-map-container">
+        <div id="animationMap"></div>
+        <div class="animation-stats">
+            <div class="stat-item">
+                <label>Progress:</label>
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+                <span id="progressText">0%</span>
+            </div>
+            <div class="stat-item">
+                <label>Current Speed:</label>
+                <span id="currentSpeed">0 km/h</span>
+            </div>
+            <div class="stat-item">
+                <label>Time Elapsed:</label>
+                <span id="timeElapsed">00:00:00</span>
+            </div>
+            <div class="stat-item">
+                <label>Distance Covered:</label>
+                <span id="distanceCovered">0.0 km</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="back-button-container">
+        <a href="{{ url_for('dashboard') }}" class="back-btn">
+            Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<script>
+    let animationMap;
+    let trackPath = [];
+    let animationMarker;
+    let pathPolyline;
+    let animatedPolyline;
+    let currentPointIndex = 0;
+    let animationInterval;
+    let isPlaying = false;
+    let animationSpeed = 1;
+    let trackData = null;
+    let startTime = null;
+
+    // Get track ID from URL
+    const trackId = {{ track_id }};
+
+    function initAnimationMap() {
+        animationMap = new google.maps.Map(document.getElementById("animationMap"), {
+            zoom: 15,
+            center: { lat: 45.4215, lng: -75.6972 },
+            mapTypeId: 'roadmap'
+        });
+
+        loadTrackData();
+    }
+
+    function loadTrackData() {
+        fetch(`/api/track_coords/${trackId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.coords && data.coords.length > 0) {
+                    trackPath = data.coords.map(pt => ({ lat: pt.lat, lng: pt.lon }));
+                    trackData = data;
+                    
+                    // Update track info
+                    document.getElementById('track-name').textContent = data.track_name || `Track ${trackId}`;
+                    document.getElementById('track-distance').textContent = `${data.total_distance?.toFixed(2) || 0} km`;
+                    
+                    setupAnimation();
+                } else {
+                    console.error("No coordinates found for track");
+                }
+            })
+            .catch(error => {
+                console.error("Error loading track data:", error);
+            });
+    }
+
+    function setupAnimation() {
+        // Create the full path polyline (grayed out)
+        pathPolyline = new google.maps.Polyline({
+            path: trackPath,
+            map: animationMap,
+            strokeColor: '#CCCCCC',
+            strokeOpacity: 0.6,
+            strokeWeight: 3,
+        });
+
+        // Create the animated polyline (colored)
+        animatedPolyline = new google.maps.Polyline({
+            path: [],
+            map: animationMap,
+            strokeColor: '#FF4444',
+            strokeOpacity: 1.0,
+            strokeWeight: 4,
+        });
+
+        // Create the moving marker
+        animationMarker = new google.maps.Marker({
+            position: trackPath[0],
+            map: animationMap,
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 8,
+                fillColor: '#FF4444',
+                fillOpacity: 1,
+                strokeColor: '#FFFFFF',
+                strokeWeight: 2
+            },
+            title: 'Current Position'
+        });
+
+        // Center map on the track
+        const bounds = new google.maps.LatLngBounds();
+        trackPath.forEach(point => bounds.extend(point));
+        animationMap.fitBounds(bounds);
+        
+        // Setup event listeners
+        setupEventListeners();
+    }
+
+    function setupEventListeners() {
+        document.getElementById('playBtn').addEventListener('click', playAnimation);
+        document.getElementById('pauseBtn').addEventListener('click', pauseAnimation);
+        document.getElementById('resetBtn').addEventListener('click', resetAnimation);
+        
+        const speedSlider = document.getElementById('speedSlider');
+        speedSlider.addEventListener('input', (e) => {
+            animationSpeed = parseFloat(e.target.value);
+            document.getElementById('speedValue').textContent = `${animationSpeed}x`;
+            if (isPlaying) {
+                pauseAnimation();
+                playAnimation();
+            }
+        });
+    }
+
+    function playAnimation() {
+        if (isPlaying) return;
+        
+        isPlaying = true;
+        document.getElementById('playBtn').style.display = 'none';
+        document.getElementById('pauseBtn').style.display = 'flex';
+        
+        if (startTime === null) {
+            startTime = Date.now();
+        }
+        
+        animationInterval = setInterval(() => {
+            if (currentPointIndex < trackPath.length - 1) {
+                currentPointIndex++;
+                updateAnimation();
+            } else {
+                pauseAnimation();
+            }
+        }, 100 / animationSpeed);
+    }
+
+    function pauseAnimation() {
+        if (!isPlaying) return;
+        
+        isPlaying = false;
+        document.getElementById('playBtn').style.display = 'flex';
+        document.getElementById('pauseBtn').style.display = 'none';
+        
+        if (animationInterval) {
+            clearInterval(animationInterval);
+        }
+    }
+
+    function resetAnimation() {
+        pauseAnimation();
+        currentPointIndex = 0;
+        startTime = null;
+        
+        // Reset marker position
+        animationMarker.setPosition(trackPath[0]);
+        
+        // Reset animated polyline
+        animatedPolyline.setPath([]);
+        
+        // Reset stats
+        updateStats();
+    }
+
+    function updateAnimation() {
+        const currentPoint = trackPath[currentPointIndex];
+        
+        // Update marker position
+        animationMarker.setPosition(currentPoint);
+        
+        // Update animated polyline
+        const currentPath = trackPath.slice(0, currentPointIndex + 1);
+        animatedPolyline.setPath(currentPath);
+        
+        // Update stats
+        updateStats();
+    }
+
+    function updateStats() {
+        const progress = (currentPointIndex / (trackPath.length - 1)) * 100;
+        document.getElementById('progressFill').style.width = `${progress}%`;
+        document.getElementById('progressText').textContent = `${progress.toFixed(1)}%`;
+        
+        // Calculate distance covered
+        const distanceCovered = calculateDistance(trackPath.slice(0, currentPointIndex + 1));
+        document.getElementById('distanceCovered').textContent = `${distanceCovered.toFixed(2)} km`;
+        
+        // Calculate current speed (simplified)
+        const currentSpeed = trackData?.avg_speed || 0;
+        document.getElementById('currentSpeed').textContent = `${currentSpeed.toFixed(1)} km/h`;
+        
+        // Calculate time elapsed
+        const timeElapsed = startTime ? (Date.now() - startTime) / 1000 : 0;
+        document.getElementById('timeElapsed').textContent = formatTime(timeElapsed);
+    }
+
+    function calculateDistance(path) {
+        if (path.length < 2) return 0;
+        
+        let distance = 0;
+        for (let i = 1; i < path.length; i++) {
+            distance += getDistanceBetweenPoints(path[i-1], path[i]);
+        }
+        return distance;
+    }
+
+    function getDistanceBetweenPoints(point1, point2) {
+        const R = 6371; // Earth's radius in km
+        const dLat = (point2.lat - point1.lat) * Math.PI / 180;
+        const dLon = (point2.lng - point1.lng) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(point1.lat * Math.PI / 180) * Math.cos(point2.lat * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+
+    function formatTime(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+</script>
+
+<!-- Google Maps API -->
+<script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDIC1kYIY2KgufwI8iwGGIDYF8OUThkiiI&callback=initAnimationMap"></script>
+
+{% endblock %}
