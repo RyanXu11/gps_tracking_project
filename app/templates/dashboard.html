@@ -9,7 +9,9 @@
 
 <!-- Other functions can be expanded from Dashboard Page -->
 <div class="dashboard-container">
+    <!-- Map Section -->
     <div id="map"></div>
+    
     <!-- Summary Statistics Cards -->
     <div class="summary-cards">
         <div class="summary-card">
@@ -19,31 +21,6 @@
             <h3>Total Tracks: {{ summary_stats.total_tracks }}</h3>
         </div>
     </div>
-
-    <!-- Google Maps JavaScript API -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDIC1kYIY2KgufwI8iwGGIDYF8OUThkiiI"></script>
-    <script>
-        function initMap() {
-            // Set the map center: Algonquin College
-            const center = { lat: 45.3499, lng: -75.7544 };
-
-            // Create map
-            const map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 15,
-                center: center,
-            });
-
-            // Add Marker
-            const marker = new google.maps.Marker({
-                position: center,
-                map: map,
-                title: "Algonquin College",
-            });
-        }
-
-        // init
-        initMap();
-    </script>
 
     <!-- Tracks List Section -->
     <div class="tracks-section">
@@ -78,17 +55,15 @@
                         </td>
                         <td>
                             <div class="action-buttons">
+                                <a href="#" class="btn btn-secondary show-track" data-track-id="{{ track.track_id }}">
+                                    Show on Map
+                                </a>
                                 <!-- Speed chart page -->
                                 <a href="{{ url_for('speed_chart', track_id=track.track_id) }}" class="btn btn-primary">
                                     Speed Analysis
                                 </a>
-
-                                <!-- Teammate's map feature (future development) -->
-                                <!-- <a href="{{ url_for('map_view', track_id=track.track_id) }}" class="btn btn-secondary">
-                                    Map View
-                                </a> -->
-                                <a href="#" class="btn btn-secondary show-track" data-track-id="{{ track.track_id }}">
-                                    Show on Map
+                                <a href="{{ url_for('track_animation', track_id=track.track_id) }}" class="btn btn-primary">
+                                    Show Animation
                                 </a>
                             </div>
                         </td>

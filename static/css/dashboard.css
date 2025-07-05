@@ -77,11 +77,16 @@
     gap: 8px;
     justify-content: flex-start;
     align-items: center;
+    flex-direction: column;
+
 }
 
 .action-buttons .btn {
     white-space: nowrap;
     flex-shrink: 0;
+    width: -webkit-fill-available;
+    text-align: center;
+    padding: 8px 15px;
 }
 
 /* No data message styling */
