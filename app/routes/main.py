@@ -70,3 +70,16 @@ def test_db():
             'status': 'error',
             'message': f'Database error: {str(e)}'
         })
+    
+@app.route('/api/track_coords/<int:track_id>')
+def get_track_coords(track_id):
+    """Return waypoints (lat/lon) for the selected track"""
+    track = Track.get_by_id(track_id)
+    if not track:
+        return jsonify({'error': 'Track not found'}), 404
+
+    coords = track.get('jsonb_waypoints', [])
+
+    simplified_coords = [{'lat': pt['lat'], 'lon': pt['lon']} for pt in coords]
+
+    return jsonify({'coords': simplified_coords})

@@ -91,3 +91,15 @@
         padding: 20px;
     }
 }
+  #map {
+    height: 400px;
+    width: 100%;
+    margin: 20px 0;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+  }
+
+.show-track.active {
+  background-color: #ffc107; /* Highlight active track */
+  color: #000;
+}

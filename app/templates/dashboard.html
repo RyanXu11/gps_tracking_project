@@ -18,65 +18,228 @@
             <h3>Total Tracks: {{ summary_stats.total_tracks }}</h3>
         </div>
     </div>
+    <div id="map"></div>
+    <!-- Google Maps JavaScript API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDIC1kYIY2KgufwI8iwGGIDYF8OUThkiiI"></script>
+    <script>
+        function initMap() {
+            // Set the map center: Algonquin College
+            const center = { lat: 45.3499, lng: -75.7544 };
+
+            // Create map
+            const map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 15,
+                center: center,
+            });
+
+            // Add Marker
+            const marker = new google.maps.Marker({
+                position: center,
+                map: map,
+                title: "Algonquin College",
+            });
+        }
+
+        // init
+        initMap();
+    </script>
 
     <!-- Tracks List Section -->
     <div class="tracks-section">
         <h2>My Tracks</h2>
-        
+
         {% if tracks %}
-            <div class="tracks-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Track Name</th>
-                            <th>Distance (km)</th>
-                            <th>Duration</th>
-                            <th>Average Speed (km/h)</th>
-                            <th>Created Time</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+        <div class="tracks-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Track Name</th>
+                        <th>Distance (km)</th>
+                        <th>Duration</th>
+                        <th>Average Speed (km/h)</th>
+                        <th>Created Time</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
                     {% for track in tracks %}
-                        <tr>
-                            <td>{{ track.track_name }}</td>
-                            <td>{{ "%.2f"|format(track.total_distance) }}</td>
-                            <td>{{ track.total_duration }}</td>
-                            <td>{{ "%.1f"|format(track.avg_speed) }}</td>
-                            <td>
-                                {% if track.created_at %}
-                                    {{ track.created_at.strftime('%Y-%m-%d %H:%M') }}
-                                {% else %}
-                                    N/A
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div class="action-buttons">
-                                    <!-- Speed chart page -->
-                                    <a href="{{ url_for('speed_chart', track_id=track.track_id) }}" 
-                                       class="btn btn-primary">
-                                        Speed Analysis
-                                    </a>
-                                    
-                                    <!-- Teammate's map feature (future development) -->
-                                    <a href="{{ url_for('map_view', track_id=track.track_id) }}" 
-                                       class="btn btn-secondary">
-                                        Map View
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
+                    <tr>
+                        <td>{{ track.track_name }}</td>
+                        <td>{{ "%.2f"|format(track.total_distance) }}</td>
+                        <td>{{ track.total_duration }}</td>
+                        <td>{{ "%.1f"|format(track.avg_speed) }}</td>
+                        <td>
+                            {% if track.created_at %}
+                            {{ track.created_at.strftime('%Y-%m-%d %H:%M') }}
+                            {% else %}
+                            N/A
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <!-- Speed chart page -->
+                                <a href="{{ url_for('speed_chart', track_id=track.track_id) }}" class="btn btn-primary">
+                                    Speed Analysis
+                                </a>
+
+                                <!-- Teammate's map feature (future development) -->
+                                <!-- <a href="{{ url_for('map_view', track_id=track.track_id) }}" class="btn btn-secondary">
+                                    Map View
+                                </a> -->
+                                <a href="#" class="btn btn-secondary show-track" data-track-id="{{ track.track_id }}">
+                                    Show on Map
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
                     {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                </tbody>
+            </table>
+        </div>
         {% else %}
-            <div class="no-data">
-                <h3>🚀 Ready to start tracking?</h3>
-                <p>No tracks uploaded yet. Upload your first GPX file to begin analyzing your GPS data!</p>
-                <a href="{{ url_for('upload_file') }}" class="btn btn-primary">Upload GPX File</a>
-            </div>
+        <div class="no-data">
+            <h3>🚀 Ready to start tracking?</h3>
+            <p>No tracks uploaded yet. Upload your first GPX file to begin analyzing your GPS data!</p>
+            <a href="{{ url_for('upload_file') }}" class="btn btn-primary">Upload GPX File</a>
+        </div>
         {% endif %}
     </div>
 </div>
+
+<script>
+    let map;
+    const polylines = []; // Stores all polylines with their trackId as key
+    const markers = [];   // Stores all markers with their trackId as key
+    const colors = ["#FF0000", "#0000FF", "#00AA00", "#FF9900", "#AA00FF"];
+    let colorIndex = 0;
+
+    function initMap() {
+        map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 14,
+            center: { lat: 45.4215, lng: -75.6972 }
+        });
+
+        // Set up event listeners for all track buttons
+        document.querySelectorAll(".show-track").forEach(btn => {
+            btn.addEventListener("click", function (event) {
+                event.preventDefault();
+                const trackId = this.getAttribute("data-track-id");
+                toggleTrack(trackId, this);
+            });
+        });
+    }
+
+    function toggleTrack(trackId, button) {
+        // Check if track is already displayed
+        const isDisplayed = polylines.some(p => p.trackId === trackId);
+        
+        if (isDisplayed) {
+            // Remove the track from map
+            removeTrack(trackId);
+            // Update button text and class
+            button.textContent = "Show on Map";
+            button.classList.remove('active');
+        } else {
+            // Load and display the track
+            loadTrack(trackId);
+            // Update button text and class
+            button.textContent = "Hide from Map";
+            button.classList.add('active');
+        }
+    }
+
+    function loadTrack(trackId) {
+        fetch(`/api/track_coords/${trackId}`)
+            .then(response => response.json())
+            .then(data => {
+                const path = data.coords.map(pt => ({ lat: pt.lat, lng: pt.lon }));
+
+                if (path.length === 0) {
+                    console.warn("No coordinates found.");
+                    return;
+                }
+
+                // Assign color
+                const color = colors[colorIndex % colors.length];
+                colorIndex++;
+
+                // Create polyline
+                const polyline = new google.maps.Polyline({
+                    path: path,
+                    map: map,
+                    strokeColor: color,
+                    strokeOpacity: 1.0,
+                    strokeWeight: 3,
+                });
+                polyline.trackId = trackId; // Store trackId with polyline
+                polylines.push(polyline);
+
+                // Add start/end markers
+                const startMarker = new google.maps.Marker({
+                    position: path[0],
+                    map: map,
+                    label: "A",
+                    title: `Start of Track ${trackId}`,
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 5,
+                        fillColor: color,
+                        fillOpacity: 1,
+                        strokeColor: "#000",
+                        strokeWeight: 1
+                    }
+                });
+                startMarker.trackId = trackId;
+
+                const endMarker = new google.maps.Marker({
+                    position: path[path.length - 1],
+                    map: map,
+                    label: "B",
+                    title: `End of Track ${trackId}`,
+                    icon: {
+                        path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+                        scale: 4,
+                        fillColor: color,
+                        fillOpacity: 1,
+                        strokeColor: "#000",
+                        strokeWeight: 1
+                    }
+                });
+                endMarker.trackId = trackId;
+
+                markers.push(startMarker, endMarker);
+
+                // Center map on the track if it's the first one being displayed
+                if (polylines.length === 1) {
+                    map.setCenter(path[0]);
+                }
+            })
+            .catch(error => {
+                console.error("Error loading track coordinates:", error);
+            });
+    }
+
+    function removeTrack(trackId) {
+        // Remove polylines
+        for (let i = polylines.length - 1; i >= 0; i--) {
+            if (polylines[i].trackId === trackId) {
+                polylines[i].setMap(null);
+                polylines.splice(i, 1);
+            }
+        }
+        
+        // Remove markers
+        for (let i = markers.length - 1; i >= 0; i--) {
+            if (markers[i].trackId === trackId) {
+                markers[i].setMap(null);
+                markers.splice(i, 1);
+            }
+        }
+    }
+</script>
+
+<!-- Google Maps API -->
+<script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDIC1kYIY2KgufwI8iwGGIDYF8OUThkiiI&callback=initMap">
+</script>
+
 {% endblock %}
