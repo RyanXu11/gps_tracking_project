@@ -120,7 +120,20 @@ psql -d gps_tracking_db -f database/schema2.sql
 
 ### 4. Environment Variable Configuration
 Please note configuration in /settings/config.py & constants.py
+Please create .env file in your root directory like:
+```
+# Database Configuration
+DATABASE_PASSWORD=cst8276G2
 
+# API Keys
+GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
+
+```
+Note:
+
+Never commit .env file to Git
+Copy .env.example and rename to .env to get started
+Each developer should have their own .env file
 
 ### 5. Run Application
 ```bash

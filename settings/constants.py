@@ -1,5 +1,14 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 # Database Configuration
-DATABASE_URL = "postgresql://dbgroup2:cst8276@localhost/gps_tracking_db"
+DATABASE_PASSWORD = os.getenv('DATABASE_PASSWORD', 'default_password')
+DATABASE_URL = f"postgresql://dbgroup2:{DATABASE_PASSWORD}@localhost/gps_tracking_db"
+
+# API Key
+GOOGLE_MAPS_API_KEY = os.getenv('GOOGLE_MAPS_API_KEY', '')
 
 # Flask Configuration
 SECRET_KEY = "gps-tracking-secret-key-2025"
