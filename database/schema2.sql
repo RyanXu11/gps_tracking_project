@@ -63,6 +63,14 @@ CREATE TABLE tracks (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 7. 授权 dbgroup2 对所有表的访问权限
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO dbgroup2;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO dbgroup2;
+
+-- 8. 设置默认权限（将来新表也能访问）
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO dbgroup2;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO dbgroup2;
+
 -- Create indexes for better query performance
 CREATE INDEX idx_tracks_user_id ON tracks(user_id);
 CREATE INDEX idx_tracks_created_at ON tracks(created_at DESC);

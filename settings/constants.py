@@ -1,5 +1,5 @@
 # Database Configuration
-DATABASE_URL = "postgresql://dbgroup2:cst8276G2@localhost/gps_tracking_db"
+DATABASE_URL = "postgresql://dbgroup2:cst8276@localhost/gps_tracking_db"
 
 # Flask Configuration
 SECRET_KEY = "gps-tracking-secret-key-2025"

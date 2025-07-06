@@ -70,3 +70,22 @@ def test_db():
             'status': 'error',
             'message': f'Database error: {str(e)}'
         })
+    
+@app.route('/api/track_coords/<int:track_id>')
+def get_track_coords(track_id):
+    """Return waypoints (lat/lon) for the selected track"""
+    track = Track.get_by_id(track_id)
+    if not track:
+        return jsonify({'error': 'Track not found'}), 404
+
+    coords = track.get('jsonb_waypoints', [])
+
+    simplified_coords = [{'lat': pt['lat'], 'lon': pt['lon']} for pt in coords]
+
+    return jsonify({'coords': simplified_coords})
+
+
+@app.route('/animation/<int:track_id>', methods=['GET', 'POST'])
+def track_animation(track_id):
+    """Render track animation page for the given track ID"""
+    return render_template('track_animation.html', track_id=track_id)
