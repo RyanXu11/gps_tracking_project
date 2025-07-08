@@ -74,6 +74,8 @@
     let animationSpeed = 1;
     let trackData = null;
     let startTime = null;
+    let totalDistance = 0; // 新增：存储总距离
+    let timestamps = []; // 新增：存储时间戳
 
     // Get track ID from URL
     const trackId = {{ track_id }};
@@ -96,9 +98,22 @@
                     trackPath = data.coords.map(pt => ({ lat: pt.lat, lng: pt.lon }));
                     trackData = data;
                     
+                    // 新增：提取时间戳（如果API提供）
+                    if (data.timestamps) {
+                        timestamps = data.timestamps;
+                    } else {
+                        // 如果没有时间戳，创建模拟时间戳（每点间隔1秒）
+                        timestamps = data.coords.map((_, i) => i);
+                    }
+
                     // Update track info
                     document.getElementById('track-name').textContent = data.track_name || `Track ${trackId}`;
-                    document.getElementById('track-distance').textContent = `${data.total_distance?.toFixed(2) || 0} km`;
+                    // document.getElementById('track-distance').textContent = `${data.total_distance?.toFixed(2) || 0} km`;
+                    // 新增：计算总距离
+                    totalDistance = calculateDistance(trackPath);
+                    // 修复：使用计算的总距离
+                    document.getElementById('track-distance').textContent = `${totalDistance.toFixed(2)} km`;
+
                     
                     setupAnimation();
                 } else {
@@ -235,14 +250,35 @@
         const progress = (currentPointIndex / (trackPath.length - 1)) * 100;
         document.getElementById('progressFill').style.width = `${progress}%`;
         document.getElementById('progressText').textContent = `${progress.toFixed(1)}%`;
+
+        
+        // 新增：实时速度计算
+        let currentSpeed = 0;
+        if (currentPointIndex > 0) {
+            // 计算与前一点的距离
+            const distanceSegment = getDistanceBetweenPoints(
+                trackPath[currentPointIndex - 1], 
+                trackPath[currentPointIndex]
+            );
+            
+            // 计算与前一点的时间差（秒）
+            const timeDiff = timestamps[currentPointIndex] - timestamps[currentPointIndex - 1];
+            
+            // 防止除以零
+            if (timeDiff > 0) {
+                // 速度 = 距离(km) / 时间(小时)
+                currentSpeed = (distanceSegment / (timeDiff / 3600));
+            }
+        }
         
         // Calculate distance covered
         const distanceCovered = calculateDistance(trackPath.slice(0, currentPointIndex + 1));
         document.getElementById('distanceCovered').textContent = `${distanceCovered.toFixed(2)} km`;
         
         // Calculate current speed (simplified)
-        const currentSpeed = trackData?.avg_speed || 0;
+        // const currentSpeed = trackData?.avg_speed || 0;
         document.getElementById('currentSpeed').textContent = `${currentSpeed.toFixed(1)} km/h`;
+
         
         // Calculate time elapsed
         const timeElapsed = startTime ? (Date.now() - startTime) / 1000 : 0;
@@ -279,6 +315,7 @@
 </script>
 
 <!-- Google Maps API -->
-<script async src="https://maps.googleapis.com/maps/api/js?key={{ config.GOOGLE_MAPS_API_KEY }}&callback=initMap"></script>
+<!-- <script async src="https://maps.googleapis.com/maps/api/js?key={{ config.GOOGLE_MAPS_API_KEY }}&callback=initMap"></script> -->
+<script async src="https://maps.googleapis.com/maps/api/js?key={{ config.GOOGLE_MAPS_API_KEY }}&callback=initAnimationMap"></script>
 
 {% endblock %}
