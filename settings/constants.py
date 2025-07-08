@@ -119,7 +119,6 @@ SQL_QUERIES = {
         JOIN users u ON t.user_id = u.user_id
         WHERE t.is_public = true
         ORDER BY t.created_at DESC
-        LIMIT %s OFFSET %s
     """,
     'GET_PUBLIC_TRACKS_BY_DISTANCE': """
         SELECT t.*, u.username FROM tracks t

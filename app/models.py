@@ -130,6 +130,27 @@ class Track:
                 
                 return track
     
+
+    @staticmethod
+    def get_by_public():
+        """Get track by ID including GPX data with new three-field structure"""
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(SQL_QUERIES['GET_PUBLIC_TRACKS'])
+                track = cursor.fetchone()
+                
+                # Convert UTC times to local timezone if they exist in jsonb_statistics
+                if track and track.get('jsonb_statistics'):
+                    stats = track['jsonb_statistics']
+                    if 'basic_metrics' in stats:
+                        basic_metrics = stats['basic_metrics']
+                        if 'start_time' in basic_metrics:
+                            basic_metrics['start_time'] = Track.convert_utc_to_local_str(basic_metrics['start_time'])
+                        if 'end_time' in basic_metrics:
+                            basic_metrics['end_time'] = Track.convert_utc_to_local_str(basic_metrics['end_time'])
+                
+                return track
+
     @staticmethod
     def get_by_user(user_id):
         """Get all tracks for a user with new three-field structure"""
