@@ -130,6 +130,35 @@ class Track:
                 
                 return track
     
+
+    @staticmethod
+    def get_by_public():
+        """Get all public tracks with their data"""
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(SQL_QUERIES['GET_PUBLIC_TRACKS'])
+                tracks = cursor.fetchall()
+
+                processed_tracks = []
+                for track in tracks:
+                    if track:  # Ensure we have a track record
+                        # Convert to dictionary if it's not already one
+                        if not isinstance(track, dict):
+                            track_dict = dict(track)
+                        else:
+                            track_dict = track
+                    # Convert UTC times to local timezone if they exist in jsonb_statistics
+                    if track_dict.get('jsonb_statistics'):
+                        stats = track_dict['jsonb_statistics']
+                        if 'basic_metrics' in stats:
+                            basic_metrics = stats['basic_metrics']
+                            if 'start_time' in basic_metrics:
+                                basic_metrics['start_time'] = Track.convert_utc_to_local_str(basic_metrics['start_time'])
+                            if 'end_time' in basic_metrics:
+                                basic_metrics['end_time'] = Track.convert_utc_to_local_str(basic_metrics['end_time'])
+                    processed_tracks.append(track_dict)
+                return processed_tracks
+
     @staticmethod
     def get_by_user(user_id):
         """Get all tracks for a user with new three-field structure"""

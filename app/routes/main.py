@@ -89,3 +89,44 @@ def get_track_coords(track_id):
 def track_animation(track_id):
     """Render track animation page for the given track ID"""
     return render_template('track_animation.html', track_id=track_id)
+
+
+
+@app.route('/dashboard_public')
+def dashboard_public():
+    """Public dashboard showing only tracks marked as public"""
+    tracks = Track.get_by_public()
+    
+    # Prepare simplified track data for display
+    processed_tracks = []
+    total_distance = 0
+    
+    if tracks:
+        for track in tracks:
+            # Ensure we have a dictionary
+            if not isinstance(track, dict):
+                continue
+
+            stats = track.get('jsonb_statistics', {})
+            basic_metrics = stats.get('basic_metrics', {})
+            
+            # Simplified track data - only essential fields
+            track_data = {
+                'track_id': track.get('track_id'),
+                'track_name': track.get('track_name', 'Unknown'),
+                'username': track.get('username', 'Anonymous'),  # Add this line
+                'total_distance': basic_metrics.get('total_distance', 0),
+                'total_duration': basic_metrics.get('total_duration', 'N/A'),
+                'avg_speed': basic_metrics.get('avg_speed', 0),
+                'created_at': track.get('created_at')
+            }
+            
+            processed_tracks.append(track_data)
+            total_distance += track_data['total_distance']
+    
+    summary_stats = {
+        'total_distance': total_distance,
+        'total_tracks': len(processed_tracks)
+    }
+    
+    return render_template('dashboard_public.html', tracks=processed_tracks, summary_stats=summary_stats)
