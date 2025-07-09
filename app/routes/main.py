@@ -94,9 +94,8 @@ def track_animation(track_id):
 
 @app.route('/dashboard_public')
 def dashboard_public():
-    """User dashboard showing all tracks with simplified view"""
-    user_id = 1  # Currently for debugging only
-    tracks = Track.get_by_user(user_id)
+    """Public dashboard showing only tracks marked as public"""
+    tracks = Track.get_by_public()
     
     # Prepare simplified track data for display
     processed_tracks = []
@@ -104,6 +103,10 @@ def dashboard_public():
     
     if tracks:
         for track in tracks:
+            # Ensure we have a dictionary
+            if not isinstance(track, dict):
+                continue
+
             stats = track.get('jsonb_statistics', {})
             basic_metrics = stats.get('basic_metrics', {})
             
