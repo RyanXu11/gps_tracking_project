@@ -18,6 +18,8 @@
             <a href="{{ url_for('upload_file') }}" {% if request.endpoint == 'upload_file' %}class="active"{% endif %}>Upload</a>
             <a href="{{ url_for('dashboard') }}" {% if request.endpoint == 'dashboard' %}class="active"{% endif %}>My Dashboard</a>
             <a href="{{ url_for('dashboard_public') }}" {% if request.endpoint == 'dashboard_public' %}class="active"{% endif %}>Public Dashboard</a>
+            <a href="{{ url_for('login') }}" {% if request.endpoint == 'login'%}class="active"{% endif %}>Login Page</a>
+            <a href="{{ url_for('signup') }}" {% if request.endpoint == 'signup'%}class="active"{% endif %}>Sign Up Page</a>
         </div>
         {% endblock %}
         
