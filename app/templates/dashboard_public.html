@@ -31,6 +31,7 @@
             <table>
                 <thead>
                     <tr>
+                        <th>User Name</th>
                         <th>Track Name</th>
                         <th>Distance (km)</th>
                         <th>Duration</th>
@@ -42,6 +43,7 @@
                 <tbody>
                     {% for track in tracks %}
                     <tr>
+                        <td>{{ track.username }}</td>
                         <td>{{ track.track_name }}</td>
                         <td>{{ "%.2f"|format(track.total_distance) }}</td>
                         <td>{{ track.total_duration }}</td>

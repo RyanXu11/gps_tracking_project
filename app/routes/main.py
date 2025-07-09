@@ -114,6 +114,7 @@ def dashboard_public():
             track_data = {
                 'track_id': track.get('track_id'),
                 'track_name': track.get('track_name', 'Unknown'),
+                'username': track.get('username', 'Anonymous'),  # Add this line
                 'total_distance': basic_metrics.get('total_distance', 0),
                 'total_duration': basic_metrics.get('total_duration', 'N/A'),
                 'avg_speed': basic_metrics.get('avg_speed', 0),
