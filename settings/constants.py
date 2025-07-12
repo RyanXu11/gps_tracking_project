@@ -30,6 +30,14 @@ SQL_QUERIES = {
     # User queries
     'GET_USER_BY_ID': "SELECT * FROM users WHERE user_id = %s",
     'GET_USER_BY_USERNAME': "SELECT * FROM users WHERE username = %s",
+    'GET_USER_BY_EMAIL' : "SELECT * FROM users WHERE email = %s",
+    
+    # Login query
+    'VERIFY_LOGIN' : "SELECT * FROM users WHERE email = %s AND password_hash = %s",
+    
+    # Register account query
+    'VERIFY_UNIQUE_EMAIL' : "SELECT 1 FROM users WHERE email = %s",
+    'CREATE_USER' : "INSERT INTO users (username,email,password_hash) VALUES (%s,%s,%s)",
     
     # Basic track queries
     'GET_TRACKS_BY_TRACK': "SELECT * FROM tracks WHERE track_id = %s",

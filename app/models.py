@@ -20,7 +20,40 @@ class User:
                 cursor.execute(SQL_QUERIES['GET_USER_BY_USERNAME'], (username,))
                 user = cursor.fetchone()
                 return user
+            
+    @staticmethod
+    def get_by_email(email):
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execure(SQL_QUERIES['GET_USER_BY_EMAIL'],(email))
+                user = cursor.fetchone()
+                return user
+            
+class Login:
+    @staticmethod
+    def verify_login(email, password_hash):
+        with get_db_connection() as conn:
+            with conn.cursor as cursor:
+                cursor.execute(SQL_QUERIES['VERIFY_LOGIN'],(email,password_hash))
+                rowExist = cursor.fetchone()
+                return bool(rowExist)
 
+class Register:
+    @staticmethod
+    def verify_registration(email):
+        with get_db_connection() as conn:
+            with conn.cursor as cursor:
+                cursor.execute(SQL_QUERIES['VERIFY_UNIQUE_EMAIL'],(email))
+                emailExist = cursor.fetchone()
+                return bool(emailExist)
+    
+    def register_user(username,user_email,password_hash):
+        with get_db_connection() as conn:
+            with conn.cursor as cursor:
+                cursor.execute(SQL_QUERIES['CREATE_USER'],(username,user_email,password_hash))
+                new_user_id = cursor.fetchone()['user_id']
+                conn.commit()
+                return new_user_id
 class Track:
     @staticmethod
     def create(user_id, track_name, description=None, is_public=False):
