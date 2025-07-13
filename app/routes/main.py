@@ -140,7 +140,8 @@ def get_track_coords(track_id):
 @app.route('/animation/<int:track_id>', methods=['GET', 'POST'])
 def track_animation(track_id):
     """Render track animation page for the given track ID"""
-    return render_template('track_animation.html', track_id=track_id)
+    source = request.args.get('source', 'my')
+    return render_template('track_animation.html', track_id=track_id, source=source)
 
 
 # --------------------

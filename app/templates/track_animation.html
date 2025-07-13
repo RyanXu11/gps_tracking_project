@@ -56,9 +56,12 @@
     </div>
 
     <div class="back-button-container">
-        <a href="{{ url_for('dashboard') }}" class="back-btn">
+        <button type="button"
+                onclick="goToDashboard(this)"
+                class="back-btn"
+                data-source="{{ source }}">
             Back to Dashboard
-        </a>
+        </button>
     </div>
 </div>
 
@@ -311,6 +314,12 @@
         const minutes = Math.floor((seconds % 3600) / 60);
         const secs = Math.floor(seconds % 60);
         return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function goToDashboard(button) {
+        const source = button?.dataset?.source || 'my';
+        const target = source === 'public' ? '/dashboard_public' : '/dashboard';
+        window.location.href = target;
     }
 </script>
 
