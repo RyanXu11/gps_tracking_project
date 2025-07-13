@@ -1,3 +1,4 @@
+
 let map;
 const polylines = []; // Stores all polylines with their trackId as key
 const markers = [];   // Stores all markers with their trackId as key
@@ -128,34 +129,32 @@ function removeTrack(trackId) {
     }
 }
 
+function toggleVisibility(button) {
+    const trackId = button.dataset.trackId;
 
-function toggleVisibility(trackId, buttonElement) {
     fetch(`/api/toggle_visibility/${trackId}`, {
         method: 'POST'
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Update Button
+            button.classList.remove('public', 'private');
+
             if (data.is_public) {
-                buttonElement.textContent = 'Public';
-                buttonElement.classList.remove('private');
-                buttonElement.classList.add('public');
+                button.classList.add('public');
+                button.textContent = 'Public';
             } else {
-                buttonElement.textContent = 'Private';
-                buttonElement.classList.remove('public');
-                buttonElement.classList.add('private');
+                button.classList.add('private');
+                button.textContent = 'Private';
             }
+
+            console.log(`[DEBUG] Updated button for track ${trackId} → ${data.is_public ? 'Public' : 'Private'}`);
         } else {
-            alert('Failed to toggle visibility: ' + data.error);
+            alert('Toggle failed: ' + data.error);
         }
     })
     .catch(error => {
-        console.error('Error toggling visibility:', error);
-        alert('Unexpected error occurred');
+        console.error('AJAX Error:', error);
+        alert('Unexpected error');
     });
 }
-
-
-// <!-- Google Maps API -->
-<script async src="https://maps.googleapis.com/maps/api/js?key={{ config.GOOGLE_MAPS_API_KEY }}&callback=initMap"></script>
