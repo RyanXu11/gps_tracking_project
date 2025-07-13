@@ -8,9 +8,9 @@ ALTER USER dbgroup2 CREATEDB;
 DROP DATABASE IF EXISTS gps_tracking_db;
 
 CREATE DATABASE gps_tracking_db
-   WITH 
-   OWNER = dbgroup2
-   ENCODING = 'UTF8';
+    WITH 
+    OWNER = dbgroup2
+    ENCODING = 'UTF8';
 
 -- Grant necessary permissions
 GRANT ALL PRIVILEGES ON DATABASE gps_tracking_db TO dbgroup2;

@@ -33,7 +33,7 @@ SQL_QUERIES = {
     'GET_USER_BY_EMAIL' : "SELECT * FROM users WHERE email = %s",
     
     # Login query
-    'VERIFY_LOGIN' : "SELECT * FROM users WHERE email = %s AND password_hash = %s",
+    'VERIFY_LOGIN' : "SELECT * FROM users WHERE email = %s AND password_hash = crypt(%s, password_hash)",
     
     # Register account query
     'VERIFY_UNIQUE_EMAIL' : "SELECT 1 FROM users WHERE email = %s",

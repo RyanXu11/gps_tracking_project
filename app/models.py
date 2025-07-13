@@ -25,7 +25,7 @@ class User:
     def get_by_email(email):
         with get_db_connection() as conn:
             with conn.cursor() as cursor:
-                cursor.execure(SQL_QUERIES['GET_USER_BY_EMAIL'],(email))
+                cursor.execute(SQL_QUERIES['GET_USER_BY_EMAIL'], (email,))
                 user = cursor.fetchone()
                 return user
             
@@ -33,7 +33,7 @@ class Login:
     @staticmethod
     def verify_login(email, password_hash):
         with get_db_connection() as conn:
-            with conn.cursor as cursor:
+            with conn.cursor() as cursor:
                 cursor.execute(SQL_QUERIES['VERIFY_LOGIN'],(email,password_hash))
                 rowExist = cursor.fetchone()
                 return bool(rowExist)

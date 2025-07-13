@@ -3,21 +3,41 @@ Main application routes
 Handles home page, dashboard, and general navigation
 """
 
-from flask import render_template, jsonify
+from flask import render_template, jsonify, session, url_for, redirect
 from app import app
 from app.models import Track
+from functools import wraps
+
+# --------------------
+# Login Required Decorator
+# --------------------
+def login_required(f):
+    @wraps(f)
+    def secure_route(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return secure_route
 
 
+# --------------------
+# Home Page (requires login)
+# --------------------
 @app.route('/')
+@login_required
 def index():
     """Home page"""
     return render_template('index.html')
 
 
+# --------------------
+# User Dashboard (My Tracks)
+# --------------------
 @app.route('/dashboard')
+@login_required
 def dashboard():
     """User dashboard showing all tracks with simplified view"""
-    user_id = 1  # Currently for debugging only
+    user_id = session['user_id']
     tracks = Track.get_by_user(user_id)
     
     # Prepare simplified track data for display
@@ -50,11 +70,15 @@ def dashboard():
     return render_template('dashboard.html', tracks=processed_tracks, summary_stats=summary_stats)
 
 
-@app.route('/map_view/<int:track_id>')
-def map_view(track_id):
-    """Map view page - placeholder for teammate's development"""
-    return f"<h1>Map View for Track {track_id}</h1><p>This feature will be developed by teammates!</p>"
+# @app.route('/map_view/<int:track_id>')
+# def map_view(track_id):
+#     """Map view page - placeholder for teammate's development"""
+#     return f"<h1>Map View for Track {track_id}</h1><p>This feature will be developed by teammates!</p>"
 
+
+# --------------------
+# Test DB Connection (Open)
+# --------------------
 @app.route('/test_db')
 def test_db():
     """Test database connection and show basic info"""
@@ -70,7 +94,11 @@ def test_db():
             'status': 'error',
             'message': f'Database error: {str(e)}'
         })
-    
+
+
+# --------------------
+# Track Coordinate API (shared by My & Public Dashboard)
+# -------------------- 
 @app.route('/api/track_coords/<int:track_id>')
 def get_track_coords(track_id):
     """Return waypoints (lat/lon) for the selected track"""
@@ -85,13 +113,18 @@ def get_track_coords(track_id):
     return jsonify({'coords': simplified_coords})
 
 
+# --------------------
+# Track Animation (shared by My & Public Dashboard)
+# --------------------
 @app.route('/animation/<int:track_id>', methods=['GET', 'POST'])
 def track_animation(track_id):
     """Render track animation page for the given track ID"""
     return render_template('track_animation.html', track_id=track_id)
 
 
-
+# --------------------
+# Public Dashboard (Public Tracks)
+# --------------------
 @app.route('/dashboard_public')
 def dashboard_public():
     """Public dashboard showing only tracks marked as public"""

@@ -1,16 +1,26 @@
 {% extends "base.html" %}
 
-{% block title %}Upload GPX File - GPS Tracking{% endblock %}
+{% block title %}Login - GPS Tracking{% endblock %}
 
 {% block content %}
 
 <a href="{{ url_for('signup') }}" {% if request.endpoint == 'signup'%}class="active"{% endif %}>Sign Up Page</a>
 
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="flash-messages">
+        {% for message in messages %}
+        <p class="error">{{ message }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+{% endwith %}
+
 <div class="form-container">
-    <form method="post" enctype="multipart/form-data" class="login-form">
+    <form method="post" action="{{ url_for('attempt_login') }}" class="login-form">
         <h2>Sign In</h2>
         <div class="form-group">
-                    <label for="email">Email:</label>
+            <label for="email">Email:</label>
             <input type="email" id="email" name="email" required>
         </div>
 
@@ -22,3 +32,5 @@
         <button type="submit" class="submit-btn">Log In</button>
     </form>
 </div>
+
+{% endblock %}
