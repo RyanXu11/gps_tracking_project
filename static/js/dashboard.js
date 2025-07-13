@@ -28,13 +28,13 @@ function toggleTrack(trackId, button) {
         // Remove the track from map
         removeTrack(trackId);
         // Update button text and class
-        button.textContent = "Show on Map";
+        button.textContent = "Show";
         button.classList.remove('active');
     } else {
         // Load and display the track
         loadTrack(trackId);
         // Update button text and class
-        button.textContent = "Hide from Map";
+        button.textContent = "Hide";
         button.classList.add('active');
     }
 }
@@ -127,6 +127,35 @@ function removeTrack(trackId) {
         }
     }
 }
+
+
+function toggleVisibility(trackId, buttonElement) {
+    fetch(`/api/toggle_visibility/${trackId}`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update Button
+            if (data.is_public) {
+                buttonElement.textContent = 'Public';
+                buttonElement.classList.remove('private');
+                buttonElement.classList.add('public');
+            } else {
+                buttonElement.textContent = 'Private';
+                buttonElement.classList.remove('public');
+                buttonElement.classList.add('private');
+            }
+        } else {
+            alert('Failed to toggle visibility: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error toggling visibility:', error);
+        alert('Unexpected error occurred');
+    });
+}
+
 
 // <!-- Google Maps API -->
 <script async src="https://maps.googleapis.com/maps/api/js?key={{ config.GOOGLE_MAPS_API_KEY }}&callback=initMap"></script>

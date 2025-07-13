@@ -52,6 +52,12 @@
     border-radius: 12px;
 }
 
+.track-table,
+.track-table th,
+.track-table td {
+    font-size: 0.85rem;
+}
+
 .tracks-table td {
     padding: 12px;
     text-align: left;
@@ -71,22 +77,32 @@
     background-color: #f5f5f5;
 }
 
+
+.track-table td:nth-child(2),
+.track-table th:nth-child(2) {
+    text-align: center;
+}
+
+.track-table td:nth-child(4),
+.track-table th:nth-child(4) {
+    text-align: center;
+}
+
 /* Action buttons for each track */
 .action-buttons {
     display: flex;
-    gap: 8px;
-    justify-content: flex-start;
-    align-items: center;
-    flex-direction: column;
-
+    justify-content: center;
+    gap: 6px;
+    flex-direction: row;
+    flex-wrap: nowrap;
 }
 
 .action-buttons .btn {
-    white-space: nowrap;
-    flex-shrink: 0;
-    width: -webkit-fill-available;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    min-width: 60px;
     text-align: center;
-    padding: 8px 15px;
+    white-space: nowrap;
 }
 
 /* No data message styling */
@@ -116,6 +132,83 @@
   }
 
 .show-track.active {
-  background-color: #ffc107; /* Highlight active track */
-  color: #000;
+    background-color: #ffc107; /* Highlight active track */
+    color: #000;
+}
+
+.tracks-table-wrapper {
+  max-height: 250px;   /* Control the maximum height of the table, about 6 lines */
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+/* Optional: Keep the header fixed */
+.tracks-table-wrapper thead th {
+  position: sticky;
+  top: 0;
+  background-color: #f9f9f9;
+  z-index: 1;
+}
+
+/* Horizontal action buttons for each track */
+.action-buttons-horizontal {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+.action-buttons-horizontal .btn {
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    min-width: 60px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.btn-map-toggle {
+    background-color: #17a2b8;  /* Teal */
+}
+/* .btn-map-toggle:hover {
+    background-color: #138496;
+} */
+
+.btn-speed {
+    background-color: #28a745;  /* Green */
+}
+/* .btn-speed:hover {
+    background-color: #218838;
+} */
+
+.btn-animation {
+    background-color: #007bff;  /* Blue */
+}
+/* .btn-animation:hover {
+    background-color: #0069d9;
+} */
+
+.btn-toggle-visibility {
+    font-size: 0.75em;
+    padding: 5px 12px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    margin-left: 6px;
+    transition: all 0.3s ease;
+}
+
+.btn-toggle-visibility.public {
+    background-color: #28a745; /* green */
+    color: white;
+}
+
+.btn-toggle-visibility.private {
+    background-color: #6c757d; /* gray */
+    color: white;
+}
+
+.btn-toggle-visibility:hover {
+    opacity: 0.85;
 }

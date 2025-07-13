@@ -5,8 +5,6 @@
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 
-<h1>My Tracks</h1>
-
 <!-- Other functions can be expanded from Dashboard Page -->
 <div class="dashboard-container">
     <!-- Map Section -->
@@ -27,8 +25,9 @@
         <h2>My Tracks</h2>
 
         {% if tracks %}
-        <div class="tracks-table">
-            <table>
+        <!-- Height limit + scrolling area -->
+        <div class="tracks-table-wrapper">
+            <table class="track-table">
                 <thead>
                     <tr>
                         <th>Track Name</th>
@@ -37,6 +36,7 @@
                         <th>Average Speed (km/h)</th>
                         <th>Created Time</th>
                         <th>Actions</th>
+                        <th>Is_public</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -54,18 +54,31 @@
                             {% endif %}
                         </td>
                         <td>
-                            <div class="action-buttons">
-                                <a href="#" class="btn btn-secondary show-track" data-track-id="{{ track.track_id }}">
-                                    Show on Map
+                            <div class="action-buttons-horizontal">
+                                <a href="#" class="btn btn-map-toggle show-track"
+                                data-track-id="{{ track.track_id }}"
+                                title="Show or hide this track on the map">
+                                    Show
                                 </a>
-                                <!-- Speed chart page -->
-                                <a href="{{ url_for('speed_chart', track_id=track.track_id) }}" class="btn btn-primary">
-                                    Speed Analysis
+                                <a href="{{ url_for('speed_chart', track_id=track.track_id) }}"
+                                class="btn btn-speed"
+                                title="Speed Analysis for this track">
+                                    Speed
                                 </a>
-                                <a href="{{ url_for('track_animation', track_id=track.track_id) }}" class="btn btn-primary">
-                                    Show Animation
+                                <a href="{{ url_for('track_animation', track_id=track.track_id) }}"
+                                class="btn btn-animation"
+                                title="Play animated movement along this track">
+                                    Animate
                                 </a>
                             </div>
+                        </td>
+                        <td>
+                            <button type="button"
+                                    class="btn-toggle-visibility {{ 'public' if track['is_public'] else 'private' }}"
+                                    data-track-id="{{ track['track_id'] }}"
+                                    onclick="toggleVisibility(this)">
+                                {{ 'Public' if track['is_public'] else 'Private' }}
+                            </button>
                         </td>
                     </tr>
                     {% endfor %}
@@ -113,13 +126,13 @@
             // Remove the track from map
             removeTrack(trackId);
             // Update button text and class
-            button.textContent = "Show on Map";
+            button.textContent = "Show";
             button.classList.remove('active');
         } else {
             // Load and display the track
             loadTrack(trackId);
             // Update button text and class
-            button.textContent = "Hide from Map";
+            button.textContent = "Hide";
             button.classList.add('active');
         }
     }
@@ -212,9 +225,41 @@
             }
         }
     }
+
+    function toggleVisibility(button) {
+        const trackId = button.dataset.trackId;
+
+        fetch(`/api/toggle_visibility/${trackId}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                button.classList.remove('public', 'private');
+
+                if (data.is_public) {
+                    button.classList.add('public');
+                    button.textContent = 'Public';
+                } else {
+                    button.classList.add('private');
+                    button.textContent = 'Private';
+                }
+
+                console.log(`[DEBUG] Updated button for track ${trackId} → ${data.is_public ? 'Public' : 'Private'}`);
+            } else {
+                alert('Toggle failed: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('AJAX Error:', error);
+            alert('Unexpected error');
+        });
+    }
+
+
 </script>
 
 <!-- Google Maps API -->
-<script async src="https://maps.googleapis.com/maps/api/js?key={{ config.GOOGLE_MAPS_API_KEY }}&callback=initMap"></script>
+<script async src="https://maps.googleapis.com/maps/api/js?key={{ config.GOOGLE_MAPS_API_KEY }}&callback=initMap&loading=async"></script>
 
 {% endblock %}

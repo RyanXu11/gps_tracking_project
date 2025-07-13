@@ -1,6 +1,6 @@
 from app import get_db_connection
 from settings.constants import SQL_QUERIES, TIMEZONE_STR
-from psycopg2.extras import Json
+from psycopg2.extras import Json, RealDictCursor
 import pytz
 from datetime import datetime
 
@@ -46,7 +46,8 @@ class Register:
                 cursor.execute(SQL_QUERIES['VERIFY_UNIQUE_EMAIL'],(email,))
                 emailExist = cursor.fetchone()
                 return bool(emailExist)
-    
+
+    @staticmethod
     def register_user(username,user_email,password_hash):
         with get_db_connection() as conn:
             with conn.cursor() as cursor:
@@ -54,6 +55,7 @@ class Register:
                 new_user_id = cursor.fetchone()['user_id']
                 conn.commit()
                 return new_user_id
+
 class Track:
     @staticmethod
     def create(user_id, track_name, description=None, is_public=False):
@@ -337,3 +339,10 @@ class Track:
         except Exception as e:
             print(f"Error converting datetime string {dt_str}: {e}")
             return dt_str
+        
+    @staticmethod
+    def update_visibility(track_id, is_public):
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(SQL_QUERIES['UPDATE_TRACK_VISIBILITY'], (is_public, track_id))
+                conn.commit()

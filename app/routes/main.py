@@ -3,7 +3,7 @@ Main application routes
 Handles home page, dashboard, and general navigation
 """
 
-from flask import render_template, jsonify, session, url_for, redirect
+from flask import render_template, jsonify, session, url_for, redirect, flash, request
 from app import app
 from app.models import Track
 from functools import wraps
@@ -46,6 +46,7 @@ def dashboard():
     
     if tracks:
         for track in tracks:
+            print(f"Track {track['track_id']}: is_public = {track['is_public']} ({type(track['is_public'])})")
             stats = track.get('jsonb_statistics', {})
             basic_metrics = stats.get('basic_metrics', {})
             
@@ -56,6 +57,7 @@ def dashboard():
                 'total_distance': basic_metrics.get('total_distance', 0),
                 'total_duration': basic_metrics.get('total_duration', 'N/A'),
                 'avg_speed': basic_metrics.get('avg_speed', 0),
+                'is_public': track.get('is_public', False),
                 'created_at': track.get('created_at')
             }
             
@@ -68,6 +70,25 @@ def dashboard():
     }
     
     return render_template('dashboard.html', tracks=processed_tracks, summary_stats=summary_stats)
+
+
+@app.route('/api/toggle_visibility/<int:track_id>', methods=['POST'])
+@login_required
+def api_toggle_visibility(track_id):
+    user_id = session.get('user_id')
+    track = Track.get_by_id(track_id)
+
+    if not track or track.get('user_id') != user_id:
+        return jsonify({'success': False, 'error': 'Permission denied'}), 403
+
+    current = track.get('is_public', False)
+    Track.update_visibility(track_id, not current)
+
+    return jsonify({
+        'success': True,
+        'is_public': not current,
+        'track_id': track_id
+    })
 
 
 # @app.route('/map_view/<int:track_id>')
