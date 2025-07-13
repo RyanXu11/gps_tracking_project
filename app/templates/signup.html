@@ -1,15 +1,19 @@
 {% extends "base.html" %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+{% endblock %}
+
 {% block title %}Upload GPX File - GPS Tracking{% endblock %}
 
 {% block content %}
 
 <div class="form-container">
-    <form method="post" enctype="multipart/form-data" class="register-form">
+    <form method="post" enctype="multipart/form-data" class="login-form">
         <h2>Registration</h2>
         <div class="form-group">
             <label for="username">Userame:</label>
-            <input type="text" id="username" name="name" required>
+            <input type="text" id="username" name="username" required>
         </div>
 
         <div class="form-group">
@@ -35,3 +39,4 @@
     <a href="{{ url_for('login') }}" {% if request.endpoint == 'login'%}class="active"{% endif %}>Return to Login Page</a>
 
 </div>
+{% endblock %}

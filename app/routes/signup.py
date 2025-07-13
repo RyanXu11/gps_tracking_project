@@ -9,10 +9,32 @@ def signup():
 
 @app.route('/signup', methods=['POST'])
 def attempt_signup():
-    if not Register.verify_registration(request.form.get('email')):
-        Register.register_user(request.form.get('username'),request.form.get('email'),request.form.get('password'))
-        flash('Account Created. Returning to Login Page')
-        return redirect(url_for('login'))
-    else:
-        flash('This email is already in use. Please Try again')
+    username = request.form.get('username')
+    email = request.form.get('email')
+    password = request.form.get('password')
+    confirm = request.form.get('confirmPassword')
+
+    # Basic validation
+    if not username:
+        flash('Username is required.', 'error')
         return redirect(url_for('signup'))
+    elif not email:
+        flash('Email is required.', 'error')
+        return redirect(url_for('signup'))
+    elif not password:
+        flash('Password is required.', 'error')
+        return redirect(url_for('signup'))
+    elif not confirm:
+        flash('Please confirm your password.', 'error')
+        return redirect(url_for('signup'))
+    elif password != confirm:
+        flash('Passwords do not match. Please try again.', 'error')
+        return redirect(url_for('signup'))
+    elif Register.verify_registration(email):
+        flash('This email is already in use. Please try another.', 'error')
+        return redirect(url_for('signup'))
+
+    # Register user
+    Register.register_user(username, email, password)
+    flash('Account created successfully! You can now log in.', 'success')
+    return redirect(url_for('login'))

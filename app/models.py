@@ -42,14 +42,14 @@ class Register:
     @staticmethod
     def verify_registration(email):
         with get_db_connection() as conn:
-            with conn.cursor as cursor:
-                cursor.execute(SQL_QUERIES['VERIFY_UNIQUE_EMAIL'],(email))
+            with conn.cursor() as cursor:
+                cursor.execute(SQL_QUERIES['VERIFY_UNIQUE_EMAIL'],(email,))
                 emailExist = cursor.fetchone()
                 return bool(emailExist)
     
     def register_user(username,user_email,password_hash):
         with get_db_connection() as conn:
-            with conn.cursor as cursor:
+            with conn.cursor() as cursor:
                 cursor.execute(SQL_QUERIES['CREATE_USER'],(username,user_email,password_hash))
                 new_user_id = cursor.fetchone()['user_id']
                 conn.commit()

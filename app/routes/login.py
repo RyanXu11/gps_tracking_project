@@ -14,7 +14,13 @@ def attempt_login():
         if user:
             session['user_id'] = user['user_id']
             session['username'] = user['username']
-            return redirect(url_for('index'))
+            return redirect(url_for('dashboard'))
         
     flash('Invalid email and password combination')
+    return redirect(url_for('login'))
+
+
+@app.route('/logout')
+def logout():
+    session.clear()
     return redirect(url_for('login'))

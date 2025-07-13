@@ -37,7 +37,11 @@ SQL_QUERIES = {
     
     # Register account query
     'VERIFY_UNIQUE_EMAIL' : "SELECT 1 FROM users WHERE email = %s",
-    'CREATE_USER' : "INSERT INTO users (username,email,password_hash) VALUES (%s,%s,%s)",
+    'CREATE_USER' : """
+        INSERT INTO users (username, email, password_hash)
+        VALUES (%s, %s, crypt(%s, gen_salt('bf')))
+        RETURNING user_id
+    """,
     
     # Basic track queries
     'GET_TRACKS_BY_TRACK': "SELECT * FROM tracks WHERE track_id = %s",

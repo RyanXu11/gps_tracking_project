@@ -2,9 +2,13 @@
 
 {% block title %}Login - GPS Tracking{% endblock %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+{% endblock %}
+
 {% block content %}
 
-<a href="{{ url_for('signup') }}" {% if request.endpoint == 'signup'%}class="active"{% endif %}>Sign Up Page</a>
+<a href="{{ url_for('signup') }}" class="signup-link">Don't have an account? Sign up here</a>
 
 {% with messages = get_flashed_messages() %}
     {% if messages %}
