@@ -9,6 +9,15 @@ from app.models import Track
 from gpx_tools.gpx_processor import GPXProcessor
 from gpx_tools.utils import DateTimeUtils, validate_complete_gpx_data
 from gpx_tools.utils import detect_outliers_iqr, interpolate_outliers
+from urllib.parse import urlparse, parse_qs
+
+
+def get_source_from_referrer():
+    ref = request.referrer or ''
+    parsed = urlparse(ref)
+    query = parse_qs(parsed.query)
+    return query.get('source', ['my'])[0]  # default is 'my'
+
 
 def safe_float(value, default=0.0, decimals=None):
     try:
@@ -63,102 +72,112 @@ def calculate_speeds(df, methods):
 
 @app.route('/speed_chart/<int:track_id>', methods=['GET', 'POST'])
 def speed_chart(track_id):
+    source = request.args.get('source', 'my')
+
     if request.method == 'GET':
-        track = Track.get_by_id(track_id)
-        if not track:
-            flash('Track not found')
-            return redirect(url_for('dashboard'))
+        return render_speed_chart(track_id, source)
+    else:
+        return handle_speed_reprocessing(track_id)
 
-        statistics = track.get('jsonb_statistics', {})
-        settings = statistics.get('processing_methods', {})
-        basic = statistics.get('basic_metrics', {})
-        results = statistics.get('results', {})
 
-        current = {
-            'use_iqr': settings.get('IQR_Outlier', False),
-            'window_size': settings.get('Window_Size', 2),
-            'interpolation_method': settings.get('Interpolation_Method', 'linear'),
-            'outliers_detected': results.get('outliers_detected', 0),
-            'processed_max_speed': results.get('processed_max_speed', 0),
-            'raw_max_speed': results.get('raw_max_speed', 0)
-        }
+def render_speed_chart(track_id, source):
+    track = Track.get_by_id(track_id)
+    if not track:
+        flash('Track not found')
+        return redirect(url_for('dashboard' if source == 'my' else 'dashboard_public'))
 
-        return render_template('speed_chart.html', track=track, current_settings=current,
-                               basic_metrics=basic, results=results)
+    statistics = track.get('jsonb_statistics', {})
+    settings = statistics.get('processing_methods', {})
+    basic = statistics.get('basic_metrics', {})
+    results = statistics.get('results', {})
+
+    current = {
+        'use_iqr': settings.get('IQR_Outlier', False),
+        'window_size': settings.get('Window_Size', 2),
+        'interpolation_method': settings.get('Interpolation_Method', 'linear'),
+        'outliers_detected': results.get('outliers_detected', 0),
+        'processed_max_speed': results.get('processed_max_speed', 0),
+        'raw_max_speed': results.get('raw_max_speed', 0)
+    }
+
+    return render_template('speed_chart.html',
+                           track=track,
+                           current_settings=current,
+                           basic_metrics=basic,
+                           results=results,
+                           source=source)
+
+
+def handle_speed_reprocessing(track_id):
+    source = get_source_from_referrer()
 
     use_iqr = request.form.get('use_iqr') == 'on'
     window_size = int(request.form.get('window_size', 2))
     interpolation_method = request.form.get('interpolation_method', 'linear')
-    print(f"Reprocessing track {track_id} with: IQR={use_iqr}, Window={window_size}, Interpolation={interpolation_method}")
 
     try:
         track = Track.get_by_id(track_id)
         if not track or not track.get('gpx_file'):
             return jsonify({'success': False, 'error': 'Track not found or no GPX data available'}), 404
 
-        try:
-            waypoints = track.get('jsonb_waypoints', [])
-            if not waypoints:
-                print("No stored waypoints found, reparsing GPX file...")
-                processor = GPXProcessor()
-                gpx_content = track['gpx_file'].decode('utf-8')
-                waypoints = processor.parse_gpx(gpx_content)['jsonb_waypoints']
-
+        waypoints = track.get('jsonb_waypoints', [])
+        if not waypoints:
             processor = GPXProcessor()
-            stats = processor.process_with_methods(waypoints, use_iqr, window_size, interpolation_method)
+            gpx_content = track['gpx_file'].decode('utf-8')
+            waypoints = processor.parse_gpx(gpx_content)['jsonb_waypoints']
+
+        processor = GPXProcessor()
+        stats = processor.process_with_methods(waypoints, use_iqr, window_size, interpolation_method)
+
+        try:
             metadata = track.get('jsonb_metadata', {})
-            try:
-                validate_complete_gpx_data(waypoints, metadata, stats)
-            except Exception as validation_error:
-                print(f"Validation warning: {validation_error}")
+            validate_complete_gpx_data(waypoints, metadata, stats)
+        except Exception as validation_error:
+            print(f"Validation warning: {validation_error}")
 
-            Track.update_statistics(track_id, stats)
+        Track.update_statistics(track_id, stats)
 
-            updated = Track.get_by_id(track_id).get('jsonb_statistics', {})
-            basic = updated.get('basic_metrics', {})
-            results = updated.get('results', {})
+        updated = Track.get_by_id(track_id).get('jsonb_statistics', {})
+        basic = updated.get('basic_metrics', {})
+        results = updated.get('results', {})
 
-            parts = []
-            if use_iqr:
-                parts.append(f"IQR outlier detection ({results.get('outliers_detected', 0)} outliers found)")
-            if window_size > 2:
-                parts.append(f"Moving average (window: {window_size})")
-            if interpolation_method != 'linear':
-                parts.append(f"Interpolation: {interpolation_method}")
-            msg = f" Applied: {', '.join(parts)}" if parts else ""
+        msg_parts = []
+        if use_iqr:
+            msg_parts.append(f"IQR outlier detection ({results.get('outliers_detected', 0)} outliers found)")
+        if window_size > 2:
+            msg_parts.append(f"Moving average (window: {window_size})")
+        if interpolation_method != 'linear':
+            msg_parts.append(f"Interpolation: {interpolation_method}")
+        msg = f" Applied: {', '.join(msg_parts)}" if msg_parts else ""
 
-            return jsonify({
-                'success': True,
-                'track_id': track_id,
-                'statistics': {
-                    'avg_speed': round(safe_float(basic.get('avg_speed', 0)), 2),
-                    'data_points_remaining': results.get('data_points_remaining', 0),
-                    'outliers_detected': results.get('outliers_detected', 0),
-                    'outliers_interpolated': results.get('outliers_interpolated', 0),
-                    'processed_max_speed': round(safe_float(results.get('processed_max_speed', 0)), 2),
-                    'raw_max_speed': safe_float(results.get('raw_max_speed', 0), decimals=2),
-                    'total_distance': float(basic.get('total_distance', 0)),
-                    'waypoint_count': len(waypoints)
-                },
-                'processing_methods': {
-                    'use_iqr': use_iqr,
-                    'window_size': window_size,
-                    'interpolation_method': interpolation_method
-                },
-                'message': f'Track reprocessed successfully!{msg}',
-                'actions': {
-                    'dashboard_url': url_for('dashboard'),
-                    'speed_chart': url_for('speed_chart', track_id=track_id)
-                }
-            })
-
-        except Exception as e:
-            print(f"Reprocessing error: {e}")
-            return jsonify({'success': False, 'error': f'Error reprocessing track: {str(e)}'}), 500
+        return jsonify({
+            'success': True,
+            'track_id': track_id,
+            'statistics': {
+                'avg_speed': round(safe_float(basic.get('avg_speed', 0)), 2),
+                'data_points_remaining': results.get('data_points_remaining', 0),
+                'outliers_detected': results.get('outliers_detected', 0),
+                'outliers_interpolated': results.get('outliers_interpolated', 0),
+                'processed_max_speed': round(safe_float(results.get('processed_max_speed', 0)), 2),
+                'raw_max_speed': safe_float(results.get('raw_max_speed', 0), decimals=2),
+                'total_distance': float(basic.get('total_distance', 0)),
+                'waypoint_count': len(waypoints)
+            },
+            'processing_methods': {
+                'use_iqr': use_iqr,
+                'window_size': window_size,
+                'interpolation_method': interpolation_method
+            },
+            'message': f'Track reprocessed successfully!{msg}',
+            'actions': {
+                'dashboard_url': url_for('dashboard' if source == 'my' else 'dashboard_public'),
+                'speed_chart': url_for('speed_chart', track_id=track_id) + f'?source={source}'
+            }
+        })
 
     except Exception as e:
-        print(f"Track access error: {e}")
-        return jsonify({'success': False, 'error': f'Error accessing track: {str(e)}'}), 500
+        print(f"Reprocessing error: {e}")
+        return jsonify({'success': False, 'error': f'Error reprocessing track: {str(e)}'}), 500
 
 
 @app.route('/api/track/<int:track_id>/speeds')

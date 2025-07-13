@@ -66,12 +66,12 @@
                                 title="Show or hide this track on the map">
                                     Show
                                 </a>
-                                <a href="{{ url_for('speed_chart', track_id=track.track_id) }}"
+                                <a href="{{ url_for('speed_chart', track_id=track['track_id']) }}?source=my"
                                 class="btn btn-speed"
                                 title="Speed Analysis for this track">
                                     Speed
                                 </a>
-                                <a href="{{ url_for('track_animation', track_id=track.track_id) }}"
+                                <a href="{{ url_for('track_animation', track_id=track['track_id']) }}?source=my"
                                 class="btn btn-animation"
                                 title="Play animated movement along this track">
                                     Animate

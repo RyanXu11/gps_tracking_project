@@ -61,14 +61,17 @@
                         </td>
                         <td>
                             <div class="action-buttons">
-                                <a href="#" class="btn btn-secondary btn-map-toggle show-track" data-track-id="{{ track.track_id }}" title="Show or hide this track on the map">
+                                <a href="#" class="btn btn-secondary btn-map-toggle show-track" 
+                                    data-track-id="{{ track.track_id }}" 
+                                    title="Show or hide this track on the map">
                                     Show
                                 </a>
                                 <!-- Speed chart page -->
-                                <a href="{{ url_for('speed_chart', track_id=track.track_id) }}" class="btn btn-speed" title="Speed Analysis for this track">
+                                <a href="{{ url_for('speed_chart', track_id=track['track_id']) }}?source=public" 
+                                    class="btn btn-speed" title="Speed Analysis for this track">
                                     Speed
                                 </a>
-                                <a href="{{ url_for('track_animation', track_id=track.track_id) }}"
+                                <a href="{{ url_for('track_animation', track_id=track['track_id']) }}?source=public"
                                     class="btn btn-animation" title="Play animated movement along this track">
                                     Animation
                                 </a>

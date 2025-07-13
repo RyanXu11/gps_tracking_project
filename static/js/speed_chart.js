@@ -225,6 +225,8 @@ function resetToDefaults() {
 }
 
 // Go to dashboard
-function goToDashboard() {
-    window.location.href = '/dashboard';
+function goToDashboard(button) {
+    const source = button?.dataset?.source || 'my';
+    const target = source === 'public' ? '/dashboard_public' : '/dashboard';
+    window.location.href = target;
 }
