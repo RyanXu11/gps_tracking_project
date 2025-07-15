@@ -46,16 +46,20 @@
 
 .tracks-table {
     width: 100%;
+    table-layout: auto;
     border-collapse: collapse;
-    margin-top: 25px;
+    margin-top: 20px;
     overflow: hidden;
     border-radius: 12px;
 }
 
-.track-table,
-.track-table th,
-.track-table td {
-    font-size: 0.9rem;
+.tracks-table,
+.tracks-table th,
+.tracks-table td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.8rem;
 }
 
 .tracks-table td {
@@ -73,18 +77,33 @@
     font-size: 1.1em;
 }
 
+.tracks-table thead tr{
+    background-color: #64a2df;
+    font-weight: bold;
+}
+
 .tracks-table tr:hover {
     background-color: #f5f5f5;
 }
 
 
-.track-table td:nth-child(2),
-.track-table th:nth-child(2) {
+.my-tracks-table td:nth-child(2),
+.my-tracks-table th:nth-child(2) {
     text-align: center;
 }
 
-.track-table td:nth-child(4),
-.track-table th:nth-child(4) {
+.my-tracks-table td:nth-child(4),
+.my-tracks-table th:nth-child(4) {
+    text-align: center;
+}
+
+.public-tracks-table td:nth-child(3),
+.public-tracks-table th:nth-child(3) {
+    text-align: center;
+}
+
+.public-tracks-table td:nth-child(5),
+.public-tracks-table th:nth-child(5) {
     text-align: center;
 }
 
@@ -137,7 +156,7 @@
 }
 
 .tracks-table-wrapper {
-  max-height: 250px;   /* Control the maximum height of the table, about 6 lines */
+  max-height: 300px;   /* Control the maximum height of the table, about 6 lines */
   overflow-y: auto;
   border: 1px solid #ddd;
   border-radius: 8px;

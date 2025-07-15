@@ -27,7 +27,10 @@ def login_required(f):
 @login_required
 def index():
     """Home page"""
-    return render_template('index.html')
+    if 'user_id' in session:
+        return redirect(url_for('dashboard'))
+    else:
+        return redirect(url_for('login'))
 
 
 # --------------------
