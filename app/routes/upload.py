@@ -5,7 +5,7 @@ Handles GPX file upload, processing, and success pages
 
 import os
 import hashlib
-from flask import render_template, request, redirect, url_for, flash
+from flask import render_template, request, redirect, url_for, flash, session
 from werkzeug.utils import secure_filename
 
 from app import app
@@ -59,7 +59,10 @@ def upload_file():
         print(f"File hash calculated: {file_hash}")
         
         # Check for duplicate files in database
-        user_id = 1  # currently for debugging only
+        user_id = session.get('user_id')
+        if not user_id:
+            flash("You must be logged in to upload tracks.")
+            return redirect(url_for('login'))
         if Track.check_duplicate_by_hash(user_id, file_hash):
             flash('File already exists! This GPX file has been uploaded before.')
             return redirect(request.url)
