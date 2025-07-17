@@ -22,18 +22,23 @@ gps_tracking_project/
 ├── app/                        # Flask application
 │   ├── routes/                 # HTML templates
 │   │   ├── __init__.py         # initial file for routes
-│   │   ├── api.py              # API routes for AJAX requests and data retrieval 
-│   │   ├── main.py             # Main application routes, Handles home page, dashboard, and general navigation  
+│   │   ├── animation.py        # Routes for animation 
+│   │   ├── api.py              # API routes for AJAX requests and data retrieval
+│   │   ├── login.py            # Routes for login
+│   │   ├── main.py             # Main application routes, Handles home page, dashboard, and general navigation
+│   │   ├── signup.py           # Routes for signup
 │   │   ├── speed.py            # Track speed processing route
 │   │   └── upload.py           # File upload and processing routes
 │   ├── templates/              # HTML templates
 │   │   ├── base.html           # Universal master page (including navigation, footer) 
-│   │   ├── dashboard.html      # dashborad 
-│   │   ├── index.html          # homepage
+│   │   ├── dashboard_public.html      # dashborad for public tracks
+│   │   ├── dashboard.html      # dashborad for "My tracks"
+│   │   ├── login.html          # login page
+│   │   ├── signup.html         # signup page
 │   │   ├── speed_chart.html    # recalculate the max speed by different sampling
+│   │   ├── track_animation.html        # track animation page
 │   │   ├── upload_sucess.html  # upload sucess feedback page
-│   │   ├── upload.html         # upload page
-│   │   └── ....html            # others pages
+│   │   └── upload.html         # upload page
 │   ├── __init__.py             # "firmware" for the project, not only a package statement
 │   └── models.py               # Database models
 ├── database/                   # Database related
@@ -43,22 +48,25 @@ gps_tracking_project/
 │   ├── __init__.py             # extracted key fields, convert to JSON from gpx_processor.py
 │   ├── gpx_processor.py        # GPX parsing and processing
 │   └── utils.py                # tools for gpx processing
-├── sample_data/                # gpx files processing workspace
-│   ├── temp/
-│   └── processed/
+├── settings/                   # config and constants
+│   ├── config.py
+│   └── constants.py
 ├── static/                     # Static files
 │   ├── css/                    # css files
-│   │   └── style.css      
+│   │   ├── animation.css
+│   │   ├── ...
+│   │   └── upload.css      
 │   └── js/                     # JavaScript files
-│   │   ├── common.js           # common script for other js files 
+│   │   ├── base.js           
 │   │   ├── dashboard.js   
-│   │   ├── index.js        
-│   │   ├── uploads.js          # uploads page
-│   │   └── others.js 
+│   │   ├── speed_chart.js        
+│   │   ├── upload_success.js          
+│   │   └── upload.js 
 ├── settings/                   # config and constants
 ├    ├── config.py              # Configuration file
 ├    └── constants.py           # constants file
 ├── tests/                      # Test files
+│   └── test_database.py        # Unit test
 ├── environment.yml             # Conda environment configuration
 ├── README.md                   # Readme
 ├── requirements.txt            # Python dependencies
