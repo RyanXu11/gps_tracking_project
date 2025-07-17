@@ -144,13 +144,15 @@ Visit http://localhost:5000
 
 ## Features
 
-- [ ] User registration and login
+- [X] User registration and login
 - [X] GPX file upload and parsing
 - [X] Track data storage in PostgreSQL
-- [ ] Interactive map track display
+- [X] Interactive map track display
+- [X] Track speed analysis charts
 - [ ] Track statistical analysis charts
 - [ ] Track time segment cutting functionality
-- [ ] Multi-user track comparison
+- [X] Multi-user track comparison
+- [X] Track animation in google map
 
 ## Team Assignment
 
@@ -172,16 +174,16 @@ Visit http://localhost:5000
 - [x] GPX file parsing functionality
 
 ### Sprint 2 (Week 3-4)
-- [ ] User interface development
-- [ ] Database integration
+- [x] User interface development
+- [x] Database integration
 - [x] File upload functionality
-- [ ] Basic map display
+- [x] Basic map display
 
 ### Sprint 3 (Week 5-6)
-- [ ] Data visualization charts
-- [ ] Track analysis features
-- [ ] User authentication system
-- [ ] System testing and optimization
+- [x] Data visualization charts
+- [x] Track analysis features
+- [x] User authentication system
+- [x] System testing and optimization
 
 ## Database Design
 
@@ -205,7 +207,7 @@ Visit http://localhost:5000
 - created_at, 
 - updated_at
 
-For detailed architecture see `database/schema2.sql` & `database/ERD2.png`
+For detailed architecture see `database/schema2.sql` & `database/ERD_final.png`
 
 ## API Documentation
 
@@ -216,4 +218,4 @@ For detailed architecture see `database/schema2.sql` & `database/ERD2.png`
 
 This project is for educational purposes only.
 
-(Last Modified Date: 2025-06-28)
+(Last Modified Date: 2025-07-17)
