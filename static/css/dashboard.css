@@ -208,6 +208,19 @@
     background-color: #0069d9;
 } */
 
+
+.btn-delete {
+    background-color: #dc3545; /*danger red */
+    color: white;
+    padding: 4px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.btn-delete:hover {
+    background-color: #c82333;
+}
+
 .btn-toggle-visibility {
     font-size: 0.75em;
     padding: 5px 12px;

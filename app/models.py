@@ -236,7 +236,27 @@ class Track:
         except Exception as e:
             print(f"Error updating track statistics: {e}")
             raise
-    
+
+    @staticmethod
+    def delete_by_id(track_id, user_id):
+        """
+        Securely delete a track by ID and user ID with error handling
+
+        Args:
+            track_id: ID of the track to delete
+            user_id: ID of the track owner (for security)
+        """
+        try:
+            with get_db_connection() as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute(SQL_QUERIES['DELETE_TRACK'], (track_id, user_id))
+                    conn.commit()
+
+        except Exception as e:
+            print(f"Error deleting track (track_id={track_id}, user_id={user_id}): {e}")
+            raise
+
+
     @staticmethod
     def get_tracks_by_processing_method(user_id, method_name, method_value=True):
         """

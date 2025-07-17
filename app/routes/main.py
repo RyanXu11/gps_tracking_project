@@ -75,6 +75,9 @@ def dashboard():
     return render_template('dashboard.html', tracks=processed_tracks, summary_stats=summary_stats)
 
 
+# --------------------
+# Toggle  private or public (My Tracks)
+# --------------------
 @app.route('/api/toggle_visibility/<int:track_id>', methods=['POST'])
 @login_required
 def api_toggle_visibility(track_id):
@@ -92,6 +95,34 @@ def api_toggle_visibility(track_id):
         'is_public': not current,
         'track_id': track_id
     })
+
+
+# --------------------
+# Delete track (My Tracks)
+# --------------------
+@app.route('/delete_track/<int:track_id>', methods=['POST'])
+@login_required
+def delete_track(track_id):
+    """Delete a user-owned track securely"""
+    user_id = session.get('user_id')
+    track = Track.get_by_id(track_id)
+
+    if not track:
+        flash("Track not found.")
+        return redirect(url_for('dashboard'))
+
+    if track.get('user_id') != user_id:
+        flash("Permission denied.")
+        return redirect(url_for('dashboard'))
+
+    try:
+        Track.delete_by_id(track_id, user_id)
+        flash("Track deleted successfully.")
+    except Exception as e:
+        flash("Error deleting track.")
+        print(f"Delete failed: {e}")
+
+    return redirect(url_for('dashboard'))
 
 
 # @app.route('/map_view/<int:track_id>')

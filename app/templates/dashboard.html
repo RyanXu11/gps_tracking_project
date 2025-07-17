@@ -62,20 +62,29 @@
                         <td>
                             <div class="action-buttons-horizontal">
                                 <a href="#" class="btn btn-map-toggle show-track"
-                                data-track-id="{{ track.track_id }}"
-                                title="Show or hide this track on the map">
-                                    Show
+                                    data-track-id="{{ track.track_id }}"
+                                    title="Show or hide this track on the map">
+                                        Show
                                 </a>
                                 <a href="{{ url_for('speed_chart', track_id=track['track_id']) }}?source=my"
-                                class="btn btn-speed"
-                                title="Speed Analysis for this track">
-                                    Speed
+                                    class="btn btn-speed"
+                                    title="Speed Analysis for this track">
+                                        Speed
                                 </a>
                                 <a href="{{ url_for('track_animation', track_id=track['track_id']) }}?source=my"
-                                class="btn btn-animation"
-                                title="Play animated movement along this track">
-                                    Animate
+                                    class="btn btn-animation"
+                                    title="Play animated movement along this track">
+                                        Animate
                                 </a>
+
+                                <form method="post"
+                                    action="{{ url_for('delete_track', track_id=track['track_id']) }}"
+                                    style="display:inline;"
+                                    onsubmit="return confirm('Are you sure you want to delete this track?');">
+                                    <button type="submit" class="btn btn-delete" title="Permanently delete this track">
+                                        Delete
+                                    </button>
+                                </form>
                             </div>
                         </td>
                         <td>
