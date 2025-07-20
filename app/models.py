@@ -155,13 +155,7 @@ class Track:
                 
                 # Convert UTC times to local timezone if they exist in jsonb_statistics
                 if track and track.get('jsonb_statistics'):
-                    stats = track['jsonb_statistics']
-                    if 'basic_metrics' in stats:
-                        basic_metrics = stats['basic_metrics']
-                        if 'start_time' in basic_metrics:
-                            basic_metrics['start_time'] = Track.convert_utc_to_local_str(basic_metrics['start_time'])
-                        if 'end_time' in basic_metrics:
-                            basic_metrics['end_time'] = Track.convert_utc_to_local_str(basic_metrics['end_time'])
+                    track['jsonb_statistics'] = Track.convert_utc_times_to_local(track['jsonb_statistics'])
                 
                 return track
     
@@ -176,21 +170,16 @@ class Track:
 
                 processed_tracks = []
                 for track in tracks:
-                    if track:  # Ensure we have a track record
-                        # Convert to dictionary if it's not already one
-                        if not isinstance(track, dict):
-                            track_dict = dict(track)
-                        else:
-                            track_dict = track
-                    # Convert UTC times to local timezone if they exist in jsonb_statistics
+                    if not track:
+                        continue
+
+                    # Ensure it's a dictionary
+                    track_dict = dict(track) if not isinstance(track, dict) else track
+
+                    # Convert UTC timestamps in statistics (if present)
                     if track_dict.get('jsonb_statistics'):
-                        stats = track_dict['jsonb_statistics']
-                        if 'basic_metrics' in stats:
-                            basic_metrics = stats['basic_metrics']
-                            if 'start_time' in basic_metrics:
-                                basic_metrics['start_time'] = Track.convert_utc_to_local_str(basic_metrics['start_time'])
-                            if 'end_time' in basic_metrics:
-                                basic_metrics['end_time'] = Track.convert_utc_to_local_str(basic_metrics['end_time'])
+                        track_dict['jsonb_statistics'] = Track.convert_utc_times_to_local(track_dict['jsonb_statistics'])
+
                     processed_tracks.append(track_dict)
                 return processed_tracks
 
@@ -205,14 +194,8 @@ class Track:
                 # Convert UTC times for each track
                 for track in tracks:
                     if track.get('jsonb_statistics'):
-                        stats = track['jsonb_statistics']
-                        if 'basic_metrics' in stats:
-                            basic_metrics = stats['basic_metrics']
-                            if 'start_time' in basic_metrics:
-                                basic_metrics['start_time'] = Track.convert_utc_to_local_str(basic_metrics['start_time'])
-                            if 'end_time' in basic_metrics:
-                                basic_metrics['end_time'] = Track.convert_utc_to_local_str(basic_metrics['end_time'])
-                
+                        track['jsonb_statistics'] = Track.convert_utc_times_to_local(track['jsonb_statistics'])
+
                 return tracks
 
     @staticmethod
@@ -366,3 +349,29 @@ class Track:
             with conn.cursor() as cursor:
                 cursor.execute(SQL_QUERIES['UPDATE_TRACK_VISIBILITY'], (is_public, track_id))
                 conn.commit()
+
+    @staticmethod
+    def convert_utc_times_to_local(statistics: dict) -> dict:
+        """
+        Convert UTC start_time and end_time in basic_metrics to local time string format.
+
+        Args:
+            statistics: jsonb_statistics dict
+
+        Returns:
+            Updated statistics dict with converted time strings
+        """
+        if not statistics or 'basic_metrics' not in statistics:
+            return statistics
+
+        basic_metrics = statistics.get('basic_metrics', {})
+
+        if 'start_time' in basic_metrics:
+            basic_metrics['start_time'] = Track.convert_utc_to_local_str(basic_metrics['start_time'])
+
+        if 'end_time' in basic_metrics:
+            basic_metrics['end_time'] = Track.convert_utc_to_local_str(basic_metrics['end_time'])
+
+        statistics['basic_metrics'] = basic_metrics
+        return statistics
+
